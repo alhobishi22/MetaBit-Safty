@@ -13,3 +13,6 @@ python init_db.py
 
 # Run database migrations
 flask db upgrade
+
+# Create admin user
+python create_admin.py
