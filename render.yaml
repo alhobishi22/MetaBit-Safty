@@ -3,7 +3,7 @@ services:
     name: metabit-safety
     env: python
     buildCommand: pip install -r requirements.txt && pip install pandas numpy==1.24.0
-    startCommand: gunicorn wsgi:app && python run_telegram_bot.py
+    startCommand: gunicorn wsgi:app -c gunicorn_config.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
@@ -17,6 +17,17 @@ services:
         sync: false
       - key: PORT
         value: 10000
+
+  - type: worker
+    name: metabit-safety-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run_telegram_bot.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
 
 databases:
   - name: metabit-safety-db
