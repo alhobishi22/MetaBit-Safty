@@ -135,6 +135,24 @@
                             </div>
                         </div>
 
+                        <!-- حقول مخصصة -->
+                        <div class="card bg-light border-0 p-4 mb-4">
+                            <h5 class="card-title mb-4">
+                                <i class="fas fa-plus-circle text-primary me-2"></i>
+                                حقول مخصصة
+                            </h5>
+                            <div class="custom-fields">
+                                <p class="text-muted mb-3">يمكنك إضافة حقول مخصصة حسب احتياجك لتوثيق معلومات إضافية</p>
+                                <div id="customFieldsContainer">
+                                    <!-- هنا سيتم إضافة الحقول المخصصة بشكل ديناميكي -->
+                                </div>
+                                <button type="button" class="btn btn-outline-primary mt-3" onclick="addCustomField()">
+                                    <i class="fas fa-plus me-2"></i>
+                                    إضافة حقل مخصص
+                                </button>
+                            </div>
+                        </div>
+
                         <!-- معلومات المديونية -->
                         <div class="card bg-light border-0 p-4 mb-4 debt-info" style="display: none;">
                             <h5 class="card-title mb-4">
@@ -441,19 +459,56 @@ function addWalletInfo() {
     }, 10);
 }
 
+// إضافة حقل مخصص جديد
+function addCustomField() {
+    const container = document.getElementById('customFieldsContainer');
+    const fieldIndex = document.querySelectorAll('.custom-field-row').length;
+    const newRow = document.createElement('div');
+    newRow.className = 'row g-3 mt-3 custom-field-row';
+    newRow.innerHTML = `
+        <div class="col-md-5">
+            <div class="form-floating">
+                <input type="text" name="custom_field_name_${fieldIndex}" class="form-control" placeholder="اسم الحقل" required>
+                <label>اسم الحقل</label>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="form-floating">
+                <input type="text" name="custom_field_value_${fieldIndex}" class="form-control" placeholder="قيمة الحقل" required>
+                <label>قيمة الحقل</label>
+            </div>
+        </div>
+        <div class="col-md-2 d-flex align-items-center">
+            <button type="button" class="btn btn-sm btn-outline-danger w-100" onclick="this.closest('.custom-field-row').remove()">
+                <i class="fas fa-trash-alt"></i>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(newRow);
+    
+    // تأثير حركي
+    newRow.style.opacity = '0';
+    setTimeout(() => {
+        newRow.style.transition = 'opacity 0.5s';
+        newRow.style.opacity = '1';
+    }, 10);
+}
+
 // تفعيل التحقق من صحة النموذج
 (function () {
     'use strict'
     var forms = document.querySelectorAll('.needs-validation')
-    Array.prototype.slice.call(forms).forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-                event.preventDefault()
-                event.stopPropagation()
-            }
-            form.classList.add('was-validated')
-        }, false)
-    })
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
 })()
 </script>
 {% endblock %}
