@@ -15,13 +15,22 @@ from flask import send_file
 from admin_telegram_codes import telegram_codes_bp
 import json
 from markupsafe import Markup
+import re
 
 # تأجيل استيراد pandas حتى نحتاجه فعلياً
 # import pandas as pd
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///fraud_reports.db')
+
+# تعديل رابط قاعدة البيانات للتوافق مع PostgreSQL على Render
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///fraud_reports.db')
+# تعديل رابط PostgreSQL إذا كان يبدأ بـ postgres:// (تغييره إلى postgresql://)
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
