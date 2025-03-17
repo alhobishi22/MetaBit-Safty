@@ -19,8 +19,13 @@ services:
         value: 8093639537:AAEGVJfZi1hFkv-iSiJWruGB2SYssfYJfvY
       - key: WEB_CONCURRENCY
         value: 2
+      - key: SQLALCHEMY_TRACK_MODIFICATIONS
+        value: false
+      - key: FLASK_APP
+        value: app.py
 
 databases:
   - name: metabit-safety-db
     databaseName: metabit_safety
     user: metabit_safety_user
+    plan: free
