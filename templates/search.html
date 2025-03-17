@@ -20,12 +20,11 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-floating">
-                                <select name="type" class="form-select form-select-lg" id="searchType">
-                                    <option value="all" {% if type_filter == 'all' %}selected{% endif %}>جميع البلاغات</option>
-                                    <option value="scammer" {% if type_filter == 'scammer' %}selected{% endif %}>نصاب ومحتال</option>
-                                    <option value="debt" {% if type_filter == 'debt' %}selected{% endif %}>مدين هارب</option>
+                                <select name="type" class="form-select form-select-lg h-100">
+                                    <option value="all" {% if report_type == 'all' %}selected{% endif %}>جميع البلاغات</option>
+                                    <option value="scammer" {% if report_type == 'scammer' %}selected{% endif %}>بلاغات النصب</option>
+                                    <option value="debt" {% if report_type == 'debt' %}selected{% endif %}>بلاغات المديونية</option>
                                 </select>
-                                <label for="searchType">نوع البلاغ</label>
                             </div>
                         </div>
                         <div class="col-12">
@@ -52,9 +51,9 @@
 </div>
 
 {% if query %}
-    {% if reports %}
+    {% if results %}
         <div class="row">
-            {% for report in reports %}
+            {% for result in results %}
             <div class="col-md-12 mb-4">
                 <div class="card shadow-sm border-0 rounded-4 h-100 report-card">
                     <div class="card-body p-4">
@@ -62,9 +61,9 @@
                             <div>
                                 <h5 class="card-title mb-1">
                                     <small class="text-muted">تم الإبلاغ من قبل:</small><br>
-                                    {{ report.user.username }}
+                                    {{ result.username }}
                                 </h5>
-                                {% if report.type == 'scammer' %}
+                                {% if result.type == 'scammer' %}
                                     <span class="badge bg-danger">
                                         <i class="fas fa-exclamation-triangle me-1"></i>
                                         نصاب ومحتال
@@ -79,15 +78,15 @@
                             <div class="text-muted">
                                 <small>
                                     <i class="far fa-calendar-alt me-1"></i>
-                                    {% if report.created_at %}
-                                        {{ report.created_at.strftime('%Y-%m-%d') }}
+                                    {% if result.created_at %}
+                                        {{ result.created_at.strftime('%Y-%m-%d') }}
                                     {% endif %}
                                 </small>
                             </div>
                         </div>
 
                         <!-- معلومات الدين -->
-                        {% if report.type == 'debt' and report.debt_amount %}
+                        {% if result.type == 'debt' and result.debt_amount %}
                         <div class="alert alert-warning alert-persistent mb-4">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
@@ -95,9 +94,9 @@
                                 </div>
                                 <div>
                                     <h6 class="alert-heading mb-1">معلومات الدين</h6>
-                                    <div><strong>المبلغ:</strong> {{ report.debt_amount }} ريال</div>
-                                    {% if report.debt_date %}
-                                    <div><strong>تاريخ الدين:</strong> {{ report.debt_date.strftime('%Y-%m-%d') }}</div>
+                                    <div><strong>المبلغ:</strong> {{ result.debt_amount }} ريال</div>
+                                    {% if result.debt_date %}
+                                    <div><strong>تاريخ الدين:</strong> {{ result.debt_date.strftime('%Y-%m-%d') }}</div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -111,12 +110,12 @@
                                 معلومات الشخص
                             </h6>
                             <div class="row">
-                                {% if report.scammer_name %}
+                                {% if result.scammer_name %}
                                 <div class="col-md-6">
                                     <div class="info-item">
                                         <strong>الاسم:</strong>
                                         <span class="text-danger">
-                                            {% for name in report.scammer_name.split('|') %}
+                                            {% for name in result.scammer_name.split('|') %}
                                                 {% set name_stripped = name.strip() %}
                                                 {% if name_stripped %}
                                                     {{ name_stripped }}
@@ -132,13 +131,13 @@
                                     </div>
                                 </div>
                                 {% endif %}
-                                {% if report.scammer_phone %}
+                                {% if result.scammer_phone %}
                                 <div class="col-md-6">
                                     <div class="info-item d-flex justify-content-between align-items-center">
                                         <div>
                                             <strong>رقم الهاتف:</strong>
                                             <span class="text-danger">
-                                                {% for phone in report.scammer_phone.split('|') %}
+                                                {% for phone in result.scammer_phone.split('|') %}
                                                     {% set phone_stripped = phone.strip() %}
                                                     {% if phone_stripped %}
                                                         {{ phone_stripped }}
@@ -153,7 +152,7 @@
                                             </span>
                                         </div>
                                         <div>
-                                            <button class="btn btn-sm btn-outline-success" onclick="saveContact('{{ report.scammer_phone.split('|')[0] }}', '{% if report.scammer_name %}{{ report.scammer_name.split('|')[0] }}{% else %}نصاب{% endif %}')">
+                                            <button class="btn btn-sm btn-outline-success" onclick="saveContact('{{ result.scammer_phone.split('|')[0] }}', '{% if result.scammer_name %}{{ result.scammer_name.split('|')[0] }}{% else %}نصاب{% endif %}')">
                                                 <i class="fas fa-address-card me-1"></i> حفظ كجهة اتصال
                                             </button>
                                         </div>
@@ -164,19 +163,19 @@
                         </div>
 
                         <!-- معلومات المحفظة -->
-                        {% if report.wallet_address %}
+                        {% if result.wallet_address %}
                         <div class="info-section mb-4">
                             <h6 class="section-title">
                                 <i class="fas fa-coins me-2"></i>
                                 معلومات المحفظة
                             </h6>
                             <div class="row">
-                                {% if report.wallet_address %}
+                                {% if result.wallet_address %}
                                 <div class="col-md-6">
                                     <div class="info-item">
                                         <strong>عنوان المحفظة:</strong>
                                         <span class="text-danger">
-                                            {% for wallet in report.wallet_address.split('|') %}
+                                            {% for wallet in result.wallet_address.split('|') %}
                                                 {% set wallet_stripped = wallet.strip() %}
                                                 {% if wallet_stripped %}
                                                     {{ wallet_stripped }}
@@ -192,11 +191,11 @@
                                     </div>
                                 </div>
                                 {% endif %}
-                                {% if report.network_type %}
+                                {% if result.network_type %}
                                 <div class="col-md-6">
                                     <div class="info-item">
                                         <strong>نوع الشبكة:</strong>
-                                        <span>{{ report.network_type }}</span>
+                                        <span>{{ result.network_type }}</span>
                                     </div>
                                 </div>
                                 {% endif %}
@@ -205,53 +204,65 @@
                         {% endif %}
 
                         <!-- المحافظ الرقمية العالمية -->
-                        {% if report.paypal or report.payer or report.perfect_money %}
+                        {% if result.paypal or result.payer or result.perfect_money %}
                         <div class="info-section mb-4">
                             <h6 class="section-title">
                                 <i class="fas fa-globe me-2"></i>
                                 المحافظ الرقمية العالمية
                             </h6>
                             <div class="row">
-                                {% if report.paypal %}
+                                {% if result.paypal %}
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>PayPal:</strong>
                                         <span class="text-danger">
-                                            {{ report.paypal }}
-                                            {% if duplicates and report.paypal in duplicates and duplicates[report.paypal] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.paypal] }}
-                                                </span>
+                                            {% if result.paypal.strip() %}
+                                                {{ result.paypal }}
+                                                {% if duplicates and result.paypal in duplicates and duplicates[result.paypal] > 1 %}
+                                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
+                                                        {{ duplicates[result.paypal] }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
                                             {% endif %}
                                         </span>
                                     </div>
                                 </div>
                                 {% endif %}
-                                {% if report.payer %}
+                                {% if result.payer %}
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>Payer:</strong>
                                         <span class="text-danger">
-                                            {{ report.payer }}
-                                            {% if duplicates and report.payer in duplicates and duplicates[report.payer] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.payer] }}
-                                                </span>
+                                            {% if result.payer.strip() %}
+                                                {{ result.payer }}
+                                                {% if duplicates and result.payer in duplicates and duplicates[result.payer] > 1 %}
+                                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
+                                                        {{ duplicates[result.payer] }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
                                             {% endif %}
                                         </span>
                                     </div>
                                 </div>
                                 {% endif %}
-                                {% if report.perfect_money %}
+                                {% if result.perfect_money %}
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>Perfect Money:</strong>
                                         <span class="text-danger">
-                                            {{ report.perfect_money }}
-                                            {% if duplicates and report.perfect_money in duplicates and duplicates[report.perfect_money] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.perfect_money] }}
-                                                </span>
+                                            {% if result.perfect_money.strip() %}
+                                                {{ result.perfect_money }}
+                                                {% if duplicates and result.perfect_money in duplicates and duplicates[result.perfect_money] > 1 %}
+                                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
+                                                        {{ duplicates[result.perfect_money] }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
                                             {% endif %}
                                         </span>
                                     </div>
@@ -262,83 +273,103 @@
                         {% endif %}
 
                         <!-- المحافظ المحلية -->
-                        {% if report.alkremi_bank or report.jeeb_wallet or report.jawali_wallet or report.cash_wallet or report.one_cash %}
+                        {% if result.alkremi_bank or result.jeeb_wallet or result.jawali_wallet or result.cash_wallet or result.one_cash %}
                         <div class="info-section mb-4">
                             <h6 class="section-title">
                                 <i class="fas fa-wallet me-2"></i>
                                 المحافظ والحسابات المحلية
                             </h6>
                             <div class="row">
-                                {% if report.alkremi_bank %}
+                                {% if result.alkremi_bank %}
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>بنك الكريمي:</strong>
                                         <span class="text-danger">
-                                            {{ report.alkremi_bank }}
-                                            {% if duplicates and report.alkremi_bank in duplicates and duplicates[report.alkremi_bank] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.alkremi_bank] }}
-                                                </span>
+                                            {% if result.alkremi_bank.strip() %}
+                                                {{ result.alkremi_bank }}
+                                                {% if duplicates and result.alkremi_bank in duplicates and duplicates[result.alkremi_bank] > 1 %}
+                                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
+                                                        {{ duplicates[result.alkremi_bank] }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
                                             {% endif %}
                                         </span>
                                     </div>
                                 </div>
                                 {% endif %}
-                                {% if report.jeeb_wallet %}
+                                {% if result.jeeb_wallet %}
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>محفظة جيب:</strong>
                                         <span class="text-danger">
-                                            {{ report.jeeb_wallet }}
-                                            {% if duplicates and report.jeeb_wallet in duplicates and duplicates[report.jeeb_wallet] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.jeeb_wallet] }}
-                                                </span>
+                                            {% if result.jeeb_wallet.strip() %}
+                                                {{ result.jeeb_wallet }}
+                                                {% if duplicates and result.jeeb_wallet in duplicates and duplicates[result.jeeb_wallet] > 1 %}
+                                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
+                                                        {{ duplicates[result.jeeb_wallet] }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
                                             {% endif %}
                                         </span>
                                     </div>
                                 </div>
                                 {% endif %}
-                                {% if report.jawali_wallet %}
+                                {% if result.jawali_wallet %}
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>محفظة جوالي:</strong>
                                         <span class="text-danger">
-                                            {{ report.jawali_wallet }}
-                                            {% if duplicates and report.jawali_wallet in duplicates and duplicates[report.jawali_wallet] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.jawali_wallet] }}
-                                                </span>
+                                            {% if result.jawali_wallet.strip() %}
+                                                {{ result.jawali_wallet }}
+                                                {% if duplicates and result.jawali_wallet in duplicates and duplicates[result.jawali_wallet] > 1 %}
+                                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
+                                                        {{ duplicates[result.jawali_wallet] }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
                                             {% endif %}
                                         </span>
                                     </div>
                                 </div>
                                 {% endif %}
-                                {% if report.cash_wallet %}
+                                {% if result.cash_wallet %}
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>محفظة كاش:</strong>
                                         <span class="text-danger">
-                                            {{ report.cash_wallet }}
-                                            {% if duplicates and report.cash_wallet in duplicates and duplicates[report.cash_wallet] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.cash_wallet] }}
-                                                </span>
+                                            {% if result.cash_wallet.strip() %}
+                                                {{ result.cash_wallet }}
+                                                {% if duplicates and result.cash_wallet in duplicates and duplicates[result.cash_wallet] > 1 %}
+                                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
+                                                        {{ duplicates[result.cash_wallet] }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
                                             {% endif %}
                                         </span>
                                     </div>
                                 </div>
                                 {% endif %}
-                                {% if report.one_cash %}
+                                {% if result.one_cash %}
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>ون كاش:</strong>
                                         <span class="text-danger">
-                                            {{ report.one_cash }}
-                                            {% if duplicates and report.one_cash in duplicates and duplicates[report.one_cash] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.one_cash] }}
-                                                </span>
+                                            {% if result.one_cash.strip() %}
+                                                {{ result.one_cash }}
+                                                {% if duplicates and result.one_cash in duplicates and duplicates[result.one_cash] > 1 %}
+                                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
+                                                        {{ duplicates[result.one_cash] }}
+                                                    </span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="text-muted">لا يوجد</span>
                                             {% endif %}
                                         </span>
                                     </div>
@@ -348,18 +379,47 @@
                         </div>
                         {% endif %}
 
-                        {% if report.description %}
+                        <!-- الحقول المخصصة -->
+                        {% if result.custom_fields and result.custom_fields|length > 0 %}
+                        <div class="search-result-custom-fields mb-4">
+                            <h6 class="section-title">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                حقول مخصصة
+                            </h6>
+                            <div class="row">
+                                {% for field_name, field_value in result.custom_fields.items() %}
+                                <div class="col-md-6">
+                                    <div class="info-item">
+                                        <strong style="color: black;">{{ field_name }}:</strong>
+                                        <span style="color: red;">
+                                            {{ field_value }}
+                                            {% if field_value in duplicates and duplicates[field_value] > 1 %}
+                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
+                                                    {{ duplicates[field_value] }}
+                                                </span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if result.description %}
                         <div class="info-section">
                             <h6 class="section-title">
-                                <i class="fas fa-info-circle me-2"></i>
-                                تفاصيل البلاغ
+                                <i class="fas fa-comment-alt me-2"></i>
+                                الوصف
                             </h6>
-                            <p class="mb-0">{{ report.description }}</p>
+                            <div class="report-description">
+                                {{ result.description|nl2br|safe }}
+                            </div>
                         </div>
                         {% endif %}
 
                         <div class="mt-4">
-                            <a href="{{ url_for('view_report', id=report.id) }}" class="btn btn-outline-primary">
+                            <a href="{{ url_for('view_report', report_id=result.id) }}" class="btn btn-outline-primary">
                                 <i class="fas fa-eye me-2"></i>
                                 عرض التفاصيل الكاملة
                             </a>

@@ -12,6 +12,10 @@ from wtforms.validators import DataRequired, Optional
 import io
 import xlsxwriter
 from flask import send_file
+from admin_telegram_codes import telegram_codes_bp
+import pandas as pd
+import json
+from markupsafe import Markup
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
@@ -28,8 +32,32 @@ migrate = Migrate(app, db)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
+# Register blueprints
+app.register_blueprint(telegram_codes_bp)
+
 # Add zip to Jinja2 globals
 app.jinja_env.globals.update(zip=zip)
+
+# إضافة فلتر nl2br
+@app.template_filter('nl2br')
+def nl2br_filter(s):
+    if s:
+        s = s.replace('\n', Markup('<br>'))
+        return Markup(s)
+    return ''
+
+# إضافة فلتر tojson
+@app.template_filter('tojson')
+def tojson_filter(s):
+    return json.dumps(s, ensure_ascii=False)
+
+# إضافة فلتر fromjson
+@app.template_filter('fromjson')
+def fromjson_filter(s):
+    try:
+        return json.loads(s)
+    except:
+        return {}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -66,6 +94,7 @@ class Report(db.Model):
     jawali_wallet = db.Column(db.String(100))
     cash_wallet = db.Column(db.String(100))
     one_cash = db.Column(db.String(100))
+    custom_fields = db.Column(db.Text)  # تخزين الحقول المخصصة كـ JSON
     description = db.Column(db.Text)
     media_files = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -89,12 +118,14 @@ class ReportForm(FlaskForm):
     one_cash = StringField('ون كاش', validators=[Optional()])
     description = TextAreaField('الوصف', validators=[DataRequired()])
     media_files = FileField('الملفات المرفقة', validators=[Optional()])
+    custom_fields = TextAreaField('الحقول المخصصة', validators=[Optional()])
 
 @login_manager.user_loader
 def load_user(id):
     return db.session.get(User, int(id))
 
 @app.route('/')
+@login_required
 def index():
     # إحصائيات النظام
     total_reports = Report.query.count()
@@ -113,96 +144,177 @@ def index():
                          latest_reports=latest_reports)
 
 @app.route('/search')
+@login_required
 def search():
     query = request.args.get('q', '')
-    type_filter = request.args.get('type', 'all')
-    
-    if query:
-        if type_filter != 'all':
-            reports = Report.query.filter(
-                Report.type == type_filter,
-                db.or_(
-                    Report.scammer_phone.contains(query),
-                    Report.scammer_name.contains(query),
-                    Report.paypal.contains(query),
-                    Report.payer.contains(query),
-                    Report.perfect_money.contains(query),
-                    Report.alkremi_bank.contains(query),
-                    Report.jeeb_wallet.contains(query),
-                    Report.jawali_wallet.contains(query),
-                    Report.cash_wallet.contains(query),
-                    Report.one_cash.contains(query)
-                )
-            ).order_by(Report.created_at.desc()).all()
-        else:
-            reports = Report.query.filter(
-                db.or_(
-                    Report.scammer_phone.contains(query),
-                    Report.scammer_name.contains(query),
-                    Report.paypal.contains(query),
-                    Report.payer.contains(query),
-                    Report.perfect_money.contains(query),
-                    Report.alkremi_bank.contains(query),
-                    Report.jeeb_wallet.contains(query),
-                    Report.jawali_wallet.contains(query),
-                    Report.cash_wallet.contains(query),
-                    Report.one_cash.contains(query)
-                )
-            ).order_by(Report.created_at.desc()).all()
-    else:
-        reports = []
-    
-    # Count duplicates for phone numbers, payment methods, and other identifiers
+    report_type = request.args.get('type', 'all')
+    search_results = []
     duplicates = {}
     
-    # Get all reports from database to count duplicates
-    all_reports = Report.query.all()
+    if query:
+        # تحديد نوع البحث
+        reports_query = Report.query
+        if report_type != 'all':
+            reports_query = reports_query.filter_by(type=report_type)
+        
+        reports = reports_query.all()
+        search_results = []
+        
+        for report in reports:
+            report_data = {
+                'id': report.id,
+                'type': report.type,
+                'scammer_name': report.scammer_name,
+                'scammer_phone': report.scammer_phone,
+                'username': report.user.username,
+                'creation_date': report.created_at,
+                'debt_amount': report.debt_amount,
+                'wallet_address': report.wallet_address,
+                'wallet_type': report.network_type,
+                'custom_fields': {},
+                'description': report.description
+            }
+            
+            # معالجة الحقول المخصصة
+            if report.custom_fields and report.custom_fields.strip():
+                # محاولة معالجة البيانات كـ JSON
+                if report.custom_fields.strip().startswith('{') and report.custom_fields.strip().endswith('}'):
+                    try:
+                        custom_data = json.loads(report.custom_fields)
+                        # تصفية قيم "nan" من الحقول المخصصة
+                        for key, value in custom_data.items():
+                            if isinstance(value, str):
+                                if value.lower() != "nan" and value.strip():
+                                    report_data['custom_fields'][key] = value
+                                elif value.strip():
+                                    report_data['custom_fields'][key] = "لا يوجد"
+                            elif value is not None:
+                                report_data['custom_fields'][key] = str(value)
+                    except json.JSONDecodeError:
+                        pass
+                
+                # إذا لم تكن بيانات JSON أو فشل التحليل، نحاول التعامل معها كنص عادي
+                if not report_data['custom_fields'] and ':' in report.custom_fields:
+                    lines = report.custom_fields.split('\n')
+                    for line in lines:
+                        if ':' in line:
+                            parts = line.split(':', 1)
+                            key = parts[0].strip()
+                            value = parts[1].strip()
+                            if value and value.lower() != "nan":
+                                report_data['custom_fields'][key] = value
+                            elif value.strip():
+                                report_data['custom_fields'][key] = "لا يوجد"
+                        elif line.strip() and line.strip().lower() != "nan":
+                            # إذا لم يكن هناك ":" في السطر، نستخدم السطر كمفتاح وقيمة
+                            report_data['custom_fields'][f"حقل {len(report_data['custom_fields']) + 1}"] = line.strip()
+            
+            # البحث في جميع الحقول
+            match_found = False
+            search_fields = [
+                report.scammer_name, 
+                report.scammer_phone, 
+                report.wallet_address, 
+                report.network_type,
+                report.paypal, 
+                report.payer, 
+                report.perfect_money,
+                report.alkremi_bank, 
+                report.jeeb_wallet, 
+                report.jawali_wallet,
+                report.cash_wallet, 
+                report.one_cash
+            ]
+            
+            # تنظيف حقول البحث من قيم "nan"
+            for i, field in enumerate(search_fields):
+                if field and isinstance(field, str) and field.lower() == "nan":
+                    search_fields[i] = ""
+            
+            # البحث في وصف البلاغ
+            if report.description and query.lower() in report.description.lower():
+                match_found = True
+            
+            # البحث في الحقول الأساسية
+            if not match_found:
+                for field in search_fields:
+                    if field and query.lower() in field.lower():
+                        match_found = True
+                        break
+            
+            # البحث في الحقول المخصصة (فقط في القيم وليس في أسماء الحقول)
+            if not match_found and report_data['custom_fields']:
+                for field_name, field_value in report_data['custom_fields'].items():
+                    if isinstance(field_value, str) and query.lower() in field_value.lower():
+                        match_found = True
+                        break
+            
+            if match_found:
+                search_results.append(report_data)
+        
+        # Count duplicates across all reports
+        all_reports = Report.query.all()
+        
+        # Process phone numbers
+        for r in all_reports:
+            if r.scammer_phone:
+                phones = r.scammer_phone.split('|')
+                for phone in phones:
+                    phone = phone.strip()
+                    if phone and phone.lower() != "nan":
+                        duplicates[phone] = duplicates.get(phone, 0) + 1
+        
+        # Process names
+        for r in all_reports:
+            if r.scammer_name:
+                names = r.scammer_name.split('|')
+                for name in names:
+                    name = name.strip()
+                    if name and name.lower() != "nan":
+                        duplicates[name] = duplicates.get(name, 0) + 1
+        
+        # Process wallet addresses
+        for r in all_reports:
+            if r.wallet_address:
+                addresses = r.wallet_address.split('|')
+                for addr in addresses:
+                    addr = addr.strip()
+                    if addr and addr.lower() != "nan":
+                        duplicates[addr] = duplicates.get(addr, 0) + 1
+        
+        # Process payment methods
+        payment_fields = ['paypal', 'payer', 'perfect_money', 'alkremi_bank', 
+                         'jeeb_wallet', 'jawali_wallet', 'cash_wallet', 'one_cash']
+        
+        for r in all_reports:
+            for field in payment_fields:
+                value = getattr(r, field)
+                if value and value.strip() and value.lower() != "nan":
+                    duplicates[value] = duplicates.get(value, 0) + 1
+        
+        # إضافة الحقول المخصصة للتكرارات
+        for r in all_reports:
+            if r.custom_fields and r.custom_fields.strip():
+                try:
+                    # محاولة معالجة البيانات كـ JSON
+                    if r.custom_fields.strip().startswith('{') and r.custom_fields.strip().endswith('}'):
+                        custom_data = json.loads(r.custom_fields)
+                        for key, value in custom_data.items():
+                            if isinstance(value, str) and value.strip() and value.lower() != "nan":
+                                duplicates[value.strip()] = duplicates.get(value.strip(), 0) + 1
+                    else:
+                        # معالجة البيانات كنص عادي
+                        lines = r.custom_fields.split('\n')
+                        for line in lines:
+                            if ':' in line:
+                                parts = line.split(':', 1)
+                                value = parts[1].strip()
+                                if value and value.lower() != "nan":
+                                    duplicates[value] = duplicates.get(value, 0) + 1
+                except:
+                    pass
     
-    # Count phone numbers
-    for report in all_reports:
-        if report.scammer_phone:
-            phones = report.scammer_phone.split('|')
-            for phone in phones:
-                phone = phone.strip()
-                if phone:
-                    if phone in duplicates:
-                        duplicates[phone] += 1
-                    else:
-                        duplicates[phone] = 1
-        
-        # Count scammer names
-        if report.scammer_name:
-            names = report.scammer_name.split('|')
-            for name in names:
-                name = name.strip()
-                if name:
-                    if name in duplicates:
-                        duplicates[name] += 1
-                    else:
-                        duplicates[name] = 1
-        
-        # Count wallet addresses
-        if report.wallet_address:
-            wallets = report.wallet_address.split('|')
-            for wallet in wallets:
-                wallet = wallet.strip()
-                if wallet:
-                    if wallet in duplicates:
-                        duplicates[wallet] += 1
-                    else:
-                        duplicates[wallet] = 1
-        
-        # Count other identifiers (PayPal, bank accounts, etc.)
-        for field in ['paypal', 'payer', 'perfect_money', 'alkremi_bank', 
-                     'jeeb_wallet', 'jawali_wallet', 'cash_wallet', 'one_cash']:
-            value = getattr(report, field)
-            if value:
-                if value in duplicates:
-                    duplicates[value] += 1
-                else:
-                    duplicates[value] = 1
-    
-    return render_template('search.html', reports=reports, query=query, type_filter=type_filter, duplicates=duplicates)
+    return render_template('search.html', query=query, report_type=report_type, results=search_results, duplicates=duplicates)
 
 @app.route('/report', methods=['GET', 'POST'])
 @login_required
@@ -232,6 +344,21 @@ def report():
         wallet_address = '|'.join(filter(None, wallet_addresses))
         network_type = '|'.join(filter(None, network_types))
 
+        # معالجة الحقول المخصصة
+        custom_fields_data = {}
+        
+        # الحصول على جميع الحقول من النموذج
+        for key in request.form:
+            if key.startswith('custom_field_name_'):
+                index = key.split('_')[-1]
+                field_name = request.form.get(f'custom_field_name_{index}')
+                field_value = request.form.get(f'custom_field_value_{index}')
+                if field_name and field_value:
+                    custom_fields_data[field_name] = field_value
+        
+        # تحويل الحقول المخصصة إلى JSON
+        custom_fields_json = json.dumps(custom_fields_data, ensure_ascii=False) if custom_fields_data else '{}'
+
         # التحقق من صحة البيانات
         if not scammer_name:
             flash('يجب إدخال اسم النصاب', 'danger')
@@ -245,22 +372,11 @@ def report():
             flash('يجب اختيار نوع البلاغ', 'danger')
             return render_template('report.html', form=form)
         
-        # التحقق من حقول المديونية فقط إذا كان نوع البلاغ "مدين"
-        if report_type == 'debt':
-            if not debt_amount:
-                flash('يجب إدخال قيمة المديونية', 'danger')
-                return render_template('report.html', form=form)
-            if not debt_date:
-                flash('يجب إدخال تاريخ المديونية', 'danger')
-                return render_template('report.html', form=form)
-
+        # إنشاء كائن البلاغ
         try:
-            # إنشاء تقرير جديد
             report = Report(
                 user_id=current_user.id,
                 type=report_type,
-                debt_amount=float(debt_amount) if debt_amount else None,
-                debt_date=datetime.strptime(debt_date, '%Y-%m-%d').date() if debt_date else None,
                 scammer_name=scammer_name,
                 scammer_phone=scammer_phone,
                 wallet_address=wallet_address,
@@ -273,45 +389,58 @@ def report():
                 jawali_wallet=request.form.get('jawali_wallet'),
                 cash_wallet=request.form.get('cash_wallet'),
                 one_cash=request.form.get('one_cash'),
-                description=request.form.get('description')
+                description=request.form.get('description'),
+                custom_fields=custom_fields_json
             )
-
+            
+            # إضافة معلومات المديونية إذا كان نوع البلاغ مديونية
+            if report_type == 'debt':
+                if debt_amount:
+                    report.debt_amount = float(debt_amount)
+                if debt_date:
+                    report.debt_date = datetime.strptime(debt_date, '%Y-%m-%d').date()
+            
             # معالجة الملفات المرفقة
-            media_files = []
             if 'media_files' in request.files:
                 files = request.files.getlist('media_files')
+                file_paths = []
+                
                 for file in files:
-                    if file and allowed_file(file.filename):
+                    if file and file.filename and allowed_file(file.filename):
                         filename = secure_filename(file.filename)
-                        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                        media_files.append(filename)
+                        # إضافة طابع زمني لتجنب تكرار أسماء الملفات
+                        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+                        unique_filename = f"{timestamp}_{filename}"
+                        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                        file.save(file_path)
+                        file_paths.append(unique_filename)
+                
+                if file_paths:
+                    report.media_files = '|'.join(file_paths)
             
-            if media_files:
-                report.media_files = ','.join(media_files)
-
-            # حفظ التقرير في قاعدة البيانات
             db.session.add(report)
             db.session.commit()
-
+            
             flash('تم إضافة البلاغ بنجاح', 'success')
             return redirect(url_for('index'))
         except Exception as e:
             db.session.rollback()
+            print(f"Error: {str(e)}")  # إضافة سجل للخطأ
             flash('حدث خطأ أثناء حفظ البلاغ. الرجاء المحاولة مرة أخرى.', 'danger')
             return render_template('report.html', form=form)
 
     return render_template('report.html', form=form)
 
-@app.route('/edit_report/<int:id>', methods=['GET', 'POST'])
+@app.route('/edit_report/<int:report_id>', methods=['GET', 'POST'])
 @login_required
-def edit_report(id):
-    report = db.session.get(Report, id)
-    if not report:
-        abort(404)
-    if report.user_id != current_user.id:
-        abort(403)
-
-    form = ReportForm(obj=report)
+def edit_report(report_id):
+    report = Report.query.get_or_404(report_id)
+    
+    # التحقق من أن المستخدم هو صاحب البلاغ أو مدير
+    if report.user_id != current_user.id and not current_user.is_admin:
+        flash('ليس لديك صلاحية تعديل هذا البلاغ', 'danger')
+        return redirect(url_for('index'))
+    
     if request.method == 'POST':
         # جمع البيانات من النموذج
         report_type = request.form.get('type')
@@ -332,83 +461,133 @@ def edit_report(id):
         wallet_address = '|'.join(filter(None, wallet_addresses))
         network_type = '|'.join(filter(None, network_types))
 
+        # معالجة الحقول المخصصة
+        custom_fields_data = {}
+        
+        # الحصول على جميع الحقول من النموذج
+        for key in request.form:
+            if key.startswith('custom_field_name_'):
+                index = key.split('_')[-1]
+                field_name = request.form.get(f'custom_field_name_{index}')
+                field_value = request.form.get(f'custom_field_value_{index}')
+                if field_name and field_value:
+                    custom_fields_data[field_name] = field_value
+        
+        # تحويل الحقول المخصصة إلى JSON
+        custom_fields_json = json.dumps(custom_fields_data, ensure_ascii=False) if custom_fields_data else '{}'
+
         # التحقق من صحة البيانات
         if not scammer_name:
             flash('يجب إدخال اسم النصاب', 'danger')
-            return render_template('report.html', form=form, report=report)
+            return render_template('edit_report.html', report=report)
         
         if not scammer_phone:
             flash('يجب إدخال رقم هاتف النصاب', 'danger')
-            return render_template('report.html', form=form, report=report)
+            return render_template('edit_report.html', report=report)
         
         if not report_type:
             flash('يجب اختيار نوع البلاغ', 'danger')
-            return render_template('report.html', form=form, report=report)
+            return render_template('edit_report.html', report=report)
         
-        if report_type == 'debt':
-            if not debt_amount:
-                flash('يجب إدخال قيمة المديونية', 'danger')
-                return render_template('report.html', form=form, report=report)
-            if not debt_date:
-                flash('يجب إدخال تاريخ المديونية', 'danger')
-                return render_template('report.html', form=form, report=report)
-
-        # تحديث البيانات
-        report.type = report_type
-        report.debt_amount = float(debt_amount) if debt_amount else None
-        report.debt_date = datetime.strptime(debt_date, '%Y-%m-%d').date() if debt_date else None
-        report.scammer_name = scammer_name
-        report.scammer_phone = scammer_phone
-        report.wallet_address = wallet_address
-        report.network_type = network_type
-        report.paypal = request.form.get('paypal')
-        report.payer = request.form.get('payer')
-        report.perfect_money = request.form.get('perfect_money')
-        report.alkremi_bank = request.form.get('alkremi_bank')
-        report.jeeb_wallet = request.form.get('jeeb_wallet')
-        report.jawali_wallet = request.form.get('jawali_wallet')
-        report.cash_wallet = request.form.get('cash_wallet')
-        report.one_cash = request.form.get('one_cash')
-        report.description = request.form.get('description')
-
-        # معالجة الملفات المرفقة
-        if 'media_files' in request.files:
-            files = request.files.getlist('media_files')
-            new_files = []
-            for file in files:
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                    new_files.append(filename)
+        # تحديث البلاغ
+        try:
+            report.type = report_type
+            report.scammer_name = scammer_name
+            report.scammer_phone = scammer_phone
+            report.wallet_address = wallet_address
+            report.network_type = network_type
+            report.paypal = request.form.get('paypal')
+            report.payer = request.form.get('payer')
+            report.perfect_money = request.form.get('perfect_money')
+            report.alkremi_bank = request.form.get('alkremi_bank')
+            report.jeeb_wallet = request.form.get('jeeb_wallet')
+            report.jawali_wallet = request.form.get('jawali_wallet')
+            report.cash_wallet = request.form.get('cash_wallet')
+            report.one_cash = request.form.get('one_cash')
+            report.description = request.form.get('description')
+            report.custom_fields = custom_fields_json
             
-            if new_files:
-                current_files = report.media_files.split(',') if report.media_files else []
-                current_files.extend(new_files)
-                report.media_files = ','.join(filter(None, current_files))
+            # تحديث معلومات المديونية إذا كان نوع البلاغ مديونية
+            if report_type == 'debt':
+                if debt_amount:
+                    report.debt_amount = float(debt_amount)
+                else:
+                    report.debt_amount = None
+                
+                if debt_date:
+                    report.debt_date = datetime.strptime(debt_date, '%Y-%m-%d').date()
+                else:
+                    report.debt_date = None
+            else:
+                report.debt_amount = None
+                report.debt_date = None
+            
+            # معالجة الملفات المرفقة
+            if 'media_files' in request.files:
+                files = request.files.getlist('media_files')
+                new_file_paths = []
+                
+                for file in files:
+                    if file and file.filename and allowed_file(file.filename):
+                        filename = secure_filename(file.filename)
+                        # إضافة طابع زمني لتجنب تكرار أسماء الملفات
+                        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+                        unique_filename = f"{timestamp}_{filename}"
+                        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                        file.save(file_path)
+                        new_file_paths.append(unique_filename)
+                
+                # إذا كان هناك ملفات جديدة، قم بإضافتها إلى الملفات الموجودة
+                if new_file_paths:
+                    if report.media_files:
+                        existing_files = report.media_files.split('|')
+                        all_files = existing_files + new_file_paths
+                        report.media_files = '|'.join(all_files)
+                    else:
+                        report.media_files = '|'.join(new_file_paths)
+            
+            # تحديث وقت التعديل
+            report.updated_at = datetime.utcnow()
+            
+            db.session.commit()
+            
+            flash('تم تحديث البلاغ بنجاح', 'success')
+            return redirect(url_for('view_report', report_id=report.id))
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error: {str(e)}")  # إضافة سجل للخطأ
+            flash('حدث خطأ أثناء تحديث البلاغ. الرجاء المحاولة مرة أخرى.', 'danger')
+            return render_template('edit_report.html', report=report)
+    
+    # تحميل البيانات الحالية للبلاغ
+    custom_fields = {}
+    if report.custom_fields:
+        try:
+            custom_fields = json.loads(report.custom_fields)
+        except:
+            custom_fields = {}
+    
+    return render_template('edit_report.html', report=report, custom_fields=custom_fields)
 
-        db.session.commit()
-        flash('تم تحديث البلاغ بنجاح', 'success')
-        return redirect(url_for('view_report', id=report.id))
-
-    return render_template('report.html', form=form, report=report)
-
-@app.route('/report/<int:id>/delete', methods=['POST'])
+@app.route('/report/<int:report_id>/delete', methods=['POST'])
 @login_required
-def delete_report(id):
-    report = db.session.get(Report, id)
-    if not report:
-        abort(404)
-    if report.user_id != current_user.id:
-        flash('لا يمكنك حذف هذا البلاغ', 'danger')
+def delete_report(report_id):
+    report = Report.query.get_or_404(report_id)
+    
+    # التحقق من أن المستخدم هو صاحب البلاغ أو مدير
+    if report.user_id != current_user.id and not current_user.is_admin:
+        flash('ليس لديك صلاحية حذف هذا البلاغ', 'danger')
         return redirect(url_for('index'))
 
     # حذف الملفات المرفقة
     if report.media_files:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], report.media_files)
-        try:
-            os.remove(file_path)
-        except OSError:
-            pass
+        files = report.media_files.split('|')
+        for file in files:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file)
+            try:
+                os.remove(file_path)
+            except OSError:
+                pass
 
     db.session.delete(report)
     db.session.commit()
@@ -441,15 +620,39 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        
+        # التحقق من وجود المستخدم
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('اسم المستخدم موجود بالفعل، الرجاء اختيار اسم آخر', 'danger')
+            return render_template('register.html')
+        
+        # التحقق من وجود البريد الإلكتروني
+        existing_email = User.query.filter_by(email=email).first()
+        if existing_email:
+            flash('البريد الإلكتروني مستخدم بالفعل', 'danger')
+            return render_template('register.html')
+        
+        # إنشاء المستخدم الجديد
         user = User(
-            username=request.form['username'],
-            email=request.form['email']
+            username=username,
+            email=email
         )
-        user.set_password(request.form['password'])
-        db.session.add(user)
-        db.session.commit()
-        flash('تم إنشاء الحساب بنجاح', 'success')
-        return redirect(url_for('login'))
+        user.set_password(password)
+        
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash('تم إنشاء الحساب بنجاح', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            flash('حدث خطأ أثناء إنشاء الحساب، الرجاء المحاولة مرة أخرى', 'danger')
+            app.logger.error(f"خطأ في التسجيل: {str(e)}")
+            
     return render_template('register.html')
 
 @app.route('/logout')
@@ -459,53 +662,103 @@ def logout():
     flash('تم تسجيل الخروج بنجاح', 'info')
     return redirect(url_for('index'))
 
-@app.route('/view_report/<int:id>')
-def view_report(id):
-    report = db.session.get(Report, id)
-    if not report:
-        abort(404)
+@app.route('/view_report/<int:report_id>')
+@login_required
+def view_report(report_id):
+    report = db.session.get(Report, report_id)
     
-    # Count duplicates across all reports
+    # معالجة ملفات الوسائط
+    media_files = []
+    if report.media_files:
+        media_files = report.media_files.split('|')
+    
+    # قائمة بجميع الأرقام والأسماء للتحقق من التكرارات
     duplicates = {}
-    all_reports = Report.query.all()
     
-    # Process phone numbers
+    # معالجة أرقام الهواتف
+    all_reports = Report.query.all()
     for r in all_reports:
         if r.scammer_phone:
             phones = r.scammer_phone.split('|')
             for phone in phones:
-                if phone.strip():
-                    duplicates[phone.strip()] = duplicates.get(phone.strip(), 0) + 1
+                phone = phone.strip()
+                if phone and phone.lower() != "nan":
+                    duplicates[phone] = duplicates.get(phone, 0) + 1
     
-    # Process names
+    # معالجة الأسماء
     for r in all_reports:
         if r.scammer_name:
             names = r.scammer_name.split('|')
             for name in names:
-                if name.strip():
-                    duplicates[name.strip()] = duplicates.get(name.strip(), 0) + 1
+                name = name.strip()
+                if name and name.lower() != "nan":
+                    duplicates[name] = duplicates.get(name, 0) + 1
     
-    # Process wallet addresses
+    # معالجة عناوين المحافظ
     for r in all_reports:
         if r.wallet_address:
             addresses = r.wallet_address.split('|')
             for addr in addresses:
-                if addr.strip():
-                    duplicates[addr.strip()] = duplicates.get(addr.strip(), 0) + 1
+                addr = addr.strip()
+                if addr and addr.lower() != "nan":
+                    duplicates[addr] = duplicates.get(addr, 0) + 1
     
-    # Process payment methods
+    # معالجة طرق الدفع
     payment_fields = ['paypal', 'payer', 'perfect_money', 'alkremi_bank', 
                      'jeeb_wallet', 'jawali_wallet', 'cash_wallet', 'one_cash']
     
     for r in all_reports:
         for field in payment_fields:
             value = getattr(r, field)
-            if value:
+            if value and value.strip() and value.lower() != "nan":
                 duplicates[value] = duplicates.get(value, 0) + 1
     
-    return render_template('view_report.html', report=report, duplicates=duplicates)
+    # معالجة الحقول المخصصة
+    custom_fields = {}
+    if report.custom_fields and report.custom_fields.strip():
+        # محاولة معالجة البيانات كـ JSON
+        if report.custom_fields.strip().startswith('{') and report.custom_fields.strip().endswith('}'):
+            try:
+                custom_data = json.loads(report.custom_fields)
+                # تصفية قيم "nan" من الحقول المخصصة
+                for key, value in custom_data.items():
+                    if isinstance(value, str):
+                        if value.lower() != "nan" and value.strip():
+                            custom_fields[key] = value
+                            # إضافة قيمة الحقل المخصص إلى التكرارات
+                            duplicates[value] = duplicates.get(value, 0) + 1
+                        elif value.strip():
+                            custom_fields[key] = "لا يوجد"
+                    elif value is not None:
+                        str_value = str(value)
+                        custom_fields[key] = str_value
+                        duplicates[str_value] = duplicates.get(str_value, 0) + 1
+            except json.JSONDecodeError:
+                pass
+        
+        # إذا لم تكن بيانات JSON أو فشل التحليل، نحاول التعامل معها كنص عادي
+        if not custom_fields and ':' in report.custom_fields:
+            lines = report.custom_fields.split('\n')
+            for line in lines:
+                if ':' in line:
+                    parts = line.split(':', 1)
+                    key = parts[0].strip()
+                    value = parts[1].strip()
+                    if value and value.lower() != "nan":
+                        custom_fields[key] = value
+                        duplicates[value] = duplicates.get(value, 0) + 1
+                    elif value.strip():
+                        custom_fields[key] = "لا يوجد"
+                elif line.strip() and line.strip().lower() != "nan":
+                    # إذا لم يكن هناك ":" في السطر، نستخدم السطر كمفتاح وقيمة
+                    field_key = f"حقل {len(custom_fields) + 1}"
+                    custom_fields[field_key] = line.strip()
+                    duplicates[line.strip()] = duplicates.get(line.strip(), 0) + 1
+    
+    return render_template('view_report.html', report=report, media_files=media_files, duplicates=duplicates, custom_fields=custom_fields)
 
 @app.route('/get_all_contacts')
+@login_required
 def get_all_contacts():
     # Get all reports from the database
     reports = Report.query.all()
@@ -636,24 +889,31 @@ def admin_reports():
     else:
         reports = Report.query.order_by(Report.created_at.desc()).all()
     
-    return render_template('admin/reports.html', reports=reports, report_type=report_type)
+    # إعداد قائمة البلاغات مع معلومات المستخدمين
+    report_data = []
+    for report in reports:
+        user = db.session.get(User, report.user_id)
+        report_data.append({
+            'report': report,
+            'username': user.username if user else 'غير معروف'
+        })
+    
+    return render_template('admin/reports.html', reports=report_data, report_type=report_type)
 
-@app.route('/admin/reports/<int:id>/delete', methods=['POST'])
+@app.route('/admin/report/<int:report_id>/delete', methods=['POST'])
 @login_required
-def admin_delete_report(id):
+def admin_delete_report(report_id):
     if not current_user.is_admin:
-        flash('غير مصرح لك بالوصول إلى لوحة التحكم', 'danger')
+        flash('غير مصرح لك بالوصول إلى هذه الصفحة', 'danger')
         return redirect(url_for('index'))
     
-    report = db.session.get(Report, id)
-    if not report:
-        flash('البلاغ غير موجود', 'danger')
-        return redirect(url_for('admin_reports'))
+    report = Report.query.get_or_404(report_id)
     
     # حذف الملفات المرفقة
     if report.media_files:
-        for filename in report.media_files.split(','):
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        files = report.media_files.split('|')
+        for file in files:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file)
             try:
                 os.remove(file_path)
             except OSError:
@@ -731,7 +991,7 @@ def export_reports_excel():
         'رقم البلاغ', 'النوع', 'اسم النصاب', 'رقم الهاتف', 'المحفظة', 'الشبكة',
         'PayPal', 'Payer', 'Perfect Money', 'بنك الكريمي', 'محفظة جيب',
         'محفظة جوالي', 'محفظة كاش', 'ون كاش', 'قيمة المديونية', 'تاريخ المديونية',
-        'الوصف', 'المستخدم', 'تاريخ الإنشاء'
+        'الوصف', 'المستخدم', 'تاريخ الإنشاء', 'الحقول المخصصة'
     ]
     
     # كتابة العناوين
@@ -748,6 +1008,7 @@ def export_reports_excel():
     worksheet.set_column(16, 16, 40)  # الوصف
     worksheet.set_column(17, 17, 15)  # المستخدم
     worksheet.set_column(18, 18, 20)  # تاريخ الإنشاء
+    worksheet.set_column(19, 19, 40)  # الحقول المخصصة
     
     # كتابة البيانات
     for row, report in enumerate(reports, start=1):
@@ -795,7 +1056,8 @@ def export_reports_excel():
             debt_date,
             report.description or "",
             username,
-            created_at
+            created_at,
+            report.custom_fields or ""
         ]
         
         for col, value in enumerate(data):
@@ -813,6 +1075,104 @@ def export_reports_excel():
         download_name=filename,
         mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
+
+@app.route('/admin/reports/import', methods=['GET', 'POST'])
+@login_required
+def import_reports_excel():
+    if not current_user.is_admin:
+        flash('غير مصرح لك بالوصول إلى لوحة التحكم', 'danger')
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        # التحقق من وجود ملف
+        if 'excel_file' not in request.files:
+            flash('لم يتم تحديد ملف', 'danger')
+            return redirect(request.url)
+        
+        file = request.files['excel_file']
+        
+        # التحقق من اسم الملف
+        if file.filename == '':
+            flash('لم يتم تحديد ملف', 'danger')
+            return redirect(request.url)
+        
+        # التحقق من امتداد الملف
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            flash('يجب أن يكون الملف بصيغة Excel (.xlsx أو .xls)', 'danger')
+            return redirect(request.url)
+        
+        try:
+            # قراءة ملف الإكسل
+            df = pd.read_excel(file)
+            
+            # التحقق من وجود الأعمدة المطلوبة
+            required_columns = ['النوع', 'اسم النصاب', 'رقم الهاتف', 'الوصف']
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                flash(f'الأعمدة التالية مفقودة في الملف: {", ".join(missing_columns)}', 'danger')
+                return redirect(request.url)
+            
+            # عدد البلاغات التي تمت إضافتها
+            reports_added = 0
+            
+            # إضافة البلاغات من الملف
+            for _, row in df.iterrows():
+                # تحديد نوع البلاغ
+                report_type = 'scammer' if row['النوع'] == 'نصاب' else 'debt'
+                
+                # إنشاء بلاغ جديد
+                new_report = Report(
+                    user_id=current_user.id,
+                    type=report_type,
+                    scammer_name=str(row.get('اسم النصاب', '')),
+                    scammer_phone=str(row.get('رقم الهاتف', '')),
+                    description=str(row.get('الوصف', '')),
+                    wallet_address=str(row.get('المحفظة', '')),
+                    network_type=str(row.get('الشبكة', '')),
+                    paypal=str(row.get('PayPal', '')),
+                    payer=str(row.get('Payer', '')),
+                    perfect_money=str(row.get('Perfect Money', '')),
+                    alkremi_bank=str(row.get('بنك الكريمي', '')),
+                    jeeb_wallet=str(row.get('محفظة جيب', '')),
+                    jawali_wallet=str(row.get('محفظة جوالي', '')),
+                    cash_wallet=str(row.get('محفظة كاش', '')),
+                    one_cash=str(row.get('ون كاش', '')),
+                    custom_fields=str(row.get('الحقول المخصصة', ''))
+                )
+                
+                # إضافة قيمة المديونية وتاريخها إذا كان نوع البلاغ مديونية
+                if report_type == 'debt':
+                    debt_amount = row.get('قيمة المديونية')
+                    if pd.notna(debt_amount):
+                        new_report.debt_amount = float(debt_amount)
+                    
+                    debt_date = row.get('تاريخ المديونية')
+                    if pd.notna(debt_date):
+                        # تحويل التاريخ إلى كائن datetime
+                        if isinstance(debt_date, str):
+                            try:
+                                new_report.debt_date = datetime.strptime(debt_date, '%Y-%m-%d').date()
+                            except ValueError:
+                                pass
+                        else:
+                            new_report.debt_date = debt_date
+                
+                # حفظ البلاغ في قاعدة البيانات
+                db.session.add(new_report)
+                reports_added += 1
+            
+            # حفظ التغييرات في قاعدة البيانات
+            db.session.commit()
+            
+            flash(f'تم استيراد {reports_added} بلاغ بنجاح', 'success')
+            return redirect(url_for('admin_reports'))
+            
+        except Exception as e:
+            flash(f'حدث خطأ أثناء استيراد الملف: {str(e)}', 'danger')
+            return redirect(request.url)
+    
+    return render_template('admin/import_reports.html')
 
 if __name__ == '__main__':
     with app.app_context():
