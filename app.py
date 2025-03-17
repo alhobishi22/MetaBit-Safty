@@ -938,16 +938,16 @@ def export_reports_excel():
         # تأجيل استيراد pandas حتى نحتاجه فعلياً
         import pandas as pd
         
-        # فلترة البلاغات
+        # فلترة البلاغات مع تحديد عدد السجلات
         report_type = request.args.get('type', 'all')
         if report_type == 'scammer':
-            reports = Report.query.filter_by(type='scammer').order_by(Report.created_at.desc()).all()
+            reports = Report.query.filter_by(type='scammer').order_by(Report.created_at.desc()).limit(500).all()
             filename = "scammer_reports.xlsx"
         elif report_type == 'debt':
-            reports = Report.query.filter_by(type='debt').order_by(Report.created_at.desc()).all()
+            reports = Report.query.filter_by(type='debt').order_by(Report.created_at.desc()).limit(500).all()
             filename = "debt_reports.xlsx"
         else:
-            reports = Report.query.order_by(Report.created_at.desc()).all()
+            reports = Report.query.order_by(Report.created_at.desc()).limit(500).all()
             filename = "all_reports.xlsx"
         
         # إنشاء ملف إكسل في الذاكرة
@@ -1113,7 +1113,7 @@ def import_reports_excel():
         try:
             # قراءة ملف الإكسل
             import pandas as pd  # تأجيل استيراد pandas حتى نحتاجه فعلياً
-            df = pd.read_excel(file)
+            df = pd.read_excel(file, nrows=1000)  # قراءة أول 1000 صف فقط لتقليل استهلاك الذاكرة
             
             # التحقق من وجود الأعمدة المطلوبة
             required_columns = ['النوع', 'اسم النصاب', 'رقم الهاتف', 'الوصف']

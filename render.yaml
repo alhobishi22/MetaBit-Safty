@@ -4,6 +4,8 @@ services:
     env: python
     buildCommand: ./build.sh
     startCommand: ./start.sh
+    plan: free
+    autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
@@ -17,6 +19,8 @@ services:
         value: 10000
       - key: TELEGRAM_BOT_TOKEN
         sync: false
+      - key: WEB_CONCURRENCY
+        value: 2
 
 databases:
   - name: metabit-safety-db
