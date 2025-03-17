@@ -17,7 +17,7 @@ def create_admin():
                 print("Updated user to admin status")
             
             # Reset admin password
-            admin.password_hash = generate_password_hash('admin123')
+            admin.set_password('admin123')
             db.session.commit()
             print("Reset admin password to 'admin123'")
         else:
@@ -27,7 +27,7 @@ def create_admin():
                 email='admin@metabit-safety.com',
                 is_admin=True
             )
-            new_admin.password_hash = generate_password_hash('admin123')
+            new_admin.set_password('admin123')
             
             db.session.add(new_admin)
             db.session.commit()
