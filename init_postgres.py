@@ -17,7 +17,7 @@ def init_postgres_db():
                 email='admin@metabit-safety.com',
                 is_admin=True
             )
-            new_admin.password_hash = generate_password_hash('admin123')
+            new_admin.set_password('admin123')
             
             db.session.add(new_admin)
             db.session.commit()
