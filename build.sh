@@ -13,13 +13,13 @@ pip install numpy==1.24.3
 pip install -r requirements.txt
 
 # Install additional dependencies needed for production
-pip install gunicorn gevent
+pip install gunicorn gevent psycopg2-binary
 
 # List installed packages for debugging
-pip list | grep -E 'numpy|pandas'
+pip list | grep -E 'numpy|pandas|psycopg2'
 
-# Initialize the database
-python init_db.py
+# إعداد قاعدة البيانات PostgreSQL
+python init_postgres.py
 
 # Run database migrations
 flask db upgrade
