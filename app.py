@@ -13,9 +13,11 @@ import io
 import xlsxwriter
 from flask import send_file
 from admin_telegram_codes import telegram_codes_bp
-import pandas as pd
 import json
 from markupsafe import Markup
+
+# تأجيل استيراد pandas حتى نحتاجه فعلياً
+# import pandas as pd
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
@@ -932,149 +934,156 @@ def export_reports_excel():
         flash('غير مصرح لك بالوصول إلى لوحة التحكم', 'danger')
         return redirect(url_for('index'))
     
-    # فلترة البلاغات
-    report_type = request.args.get('type', 'all')
-    if report_type == 'scammer':
-        reports = Report.query.filter_by(type='scammer').order_by(Report.created_at.desc()).all()
-        filename = "scammer_reports.xlsx"
-    elif report_type == 'debt':
-        reports = Report.query.filter_by(type='debt').order_by(Report.created_at.desc()).all()
-        filename = "debt_reports.xlsx"
-    else:
-        reports = Report.query.order_by(Report.created_at.desc()).all()
-        filename = "all_reports.xlsx"
-    
-    # إنشاء ملف إكسل في الذاكرة
-    output = io.BytesIO()
-    workbook = xlsxwriter.Workbook(output)
-    worksheet = workbook.add_worksheet('البلاغات')
-    
-    # تنسيق العناوين
-    header_format = workbook.add_format({
-        'bold': True,
-        'bg_color': '#0d6efd',
-        'color': 'white',
-        'border': 1,
-        'align': 'center',
-        'valign': 'vcenter',
-        'text_wrap': True
-    })
-    
-    # تنسيق الخلايا
-    cell_format = workbook.add_format({
-        'border': 1,
-        'align': 'center',
-        'valign': 'vcenter',
-        'text_wrap': True
-    })
-    
-    # تنسيق للنصابين
-    scammer_format = workbook.add_format({
-        'border': 1,
-        'align': 'center',
-        'valign': 'vcenter',
-        'bg_color': '#ffcccc',
-        'text_wrap': True
-    })
-    
-    # تنسيق للمديونية
-    debt_format = workbook.add_format({
-        'border': 1,
-        'align': 'center',
-        'valign': 'vcenter',
-        'bg_color': '#ffffcc',
-        'text_wrap': True
-    })
-    
-    # إعداد العناوين
-    headers = [
-        'رقم البلاغ', 'النوع', 'اسم النصاب', 'رقم الهاتف', 'المحفظة', 'الشبكة',
-        'PayPal', 'Payer', 'Perfect Money', 'بنك الكريمي', 'محفظة جيب',
-        'محفظة جوالي', 'محفظة كاش', 'ون كاش', 'قيمة المديونية', 'تاريخ المديونية',
-        'الوصف', 'المستخدم', 'تاريخ الإنشاء', 'الحقول المخصصة'
-    ]
-    
-    # كتابة العناوين
-    for col, header in enumerate(headers):
-        worksheet.write(0, col, header, header_format)
-    
-    # ضبط عرض الأعمدة
-    worksheet.set_column(0, 0, 10)  # رقم البلاغ
-    worksheet.set_column(1, 1, 15)  # النوع
-    worksheet.set_column(2, 2, 25)  # اسم النصاب
-    worksheet.set_column(3, 3, 20)  # رقم الهاتف
-    worksheet.set_column(4, 14, 20)  # المحافظ والحسابات
-    worksheet.set_column(15, 15, 15)  # تاريخ المديونية
-    worksheet.set_column(16, 16, 40)  # الوصف
-    worksheet.set_column(17, 17, 15)  # المستخدم
-    worksheet.set_column(18, 18, 20)  # تاريخ الإنشاء
-    worksheet.set_column(19, 19, 40)  # الحقول المخصصة
-    
-    # كتابة البيانات
-    for row, report in enumerate(reports, start=1):
-        # تحديد التنسيق بناءً على نوع البلاغ
-        format_to_use = scammer_format if report.type == 'scammer' else debt_format
+    try:
+        # تأجيل استيراد pandas حتى نحتاجه فعلياً
+        import pandas as pd
         
-        # تحضير البيانات
-        user = User.query.get(report.user_id)
-        username = user.username if user else "غير معروف"
+        # فلترة البلاغات
+        report_type = request.args.get('type', 'all')
+        if report_type == 'scammer':
+            reports = Report.query.filter_by(type='scammer').order_by(Report.created_at.desc()).all()
+            filename = "scammer_reports.xlsx"
+        elif report_type == 'debt':
+            reports = Report.query.filter_by(type='debt').order_by(Report.created_at.desc()).all()
+            filename = "debt_reports.xlsx"
+        else:
+            reports = Report.query.order_by(Report.created_at.desc()).all()
+            filename = "all_reports.xlsx"
         
-        # تقسيم البيانات المتعددة
-        scammer_names = report.scammer_name.split('|') if report.scammer_name else []
-        scammer_name = scammer_names[0] if scammer_names else ""
+        # إنشاء ملف إكسل في الذاكرة
+        output = io.BytesIO()
+        workbook = xlsxwriter.Workbook(output)
+        worksheet = workbook.add_worksheet('البلاغات')
         
-        scammer_phones = report.scammer_phone.split('|') if report.scammer_phone else []
-        scammer_phone = scammer_phones[0] if scammer_phones else ""
+        # تنسيق العناوين
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#0d6efd',
+            'color': 'white',
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True
+        })
         
-        wallet_addresses = report.wallet_address.split('|') if report.wallet_address else []
-        wallet_address = wallet_addresses[0] if wallet_addresses else ""
+        # تنسيق الخلايا
+        cell_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'text_wrap': True
+        })
         
-        network_types = report.network_type.split('|') if report.network_type else []
-        network_type = network_types[0] if network_types else ""
+        # تنسيق للنصابين
+        scammer_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'bg_color': '#ffcccc',
+            'text_wrap': True
+        })
         
-        # تنسيق التواريخ
-        created_at = report.created_at.strftime('%Y-%m-%d %H:%M') if report.created_at else ""
-        debt_date = report.debt_date.strftime('%Y-%m-%d') if report.debt_date else ""
+        # تنسيق للمديونية
+        debt_format = workbook.add_format({
+            'border': 1,
+            'align': 'center',
+            'valign': 'vcenter',
+            'bg_color': '#ffffcc',
+            'text_wrap': True
+        })
         
-        # كتابة البيانات في الصفوف
-        data = [
-            report.id,
-            'نصاب' if report.type == 'scammer' else 'مديونية',
-            scammer_name,
-            scammer_phone,
-            wallet_address,
-            network_type,
-            report.paypal or "",
-            report.payer or "",
-            report.perfect_money or "",
-            report.alkremi_bank or "",
-            report.jeeb_wallet or "",
-            report.jawali_wallet or "",
-            report.cash_wallet or "",
-            report.one_cash or "",
-            report.debt_amount or "",
-            debt_date,
-            report.description or "",
-            username,
-            created_at,
-            report.custom_fields or ""
+        # إعداد العناوين
+        headers = [
+            'رقم البلاغ', 'النوع', 'اسم النصاب', 'رقم الهاتف', 'المحفظة', 'الشبكة',
+            'PayPal', 'Payer', 'Perfect Money', 'بنك الكريمي', 'محفظة جيب',
+            'محفظة جوالي', 'محفظة كاش', 'ون كاش', 'قيمة المديونية', 'تاريخ المديونية',
+            'الوصف', 'المستخدم', 'تاريخ الإنشاء', 'الحقول المخصصة'
         ]
         
-        for col, value in enumerate(data):
-            worksheet.write(row, col, value, format_to_use)
-    
-    workbook.close()
-    
-    # إعادة مؤشر الملف إلى البداية
-    output.seek(0)
-    
-    # إرسال الملف للتنزيل
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name=filename,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+        # كتابة العناوين
+        for col, header in enumerate(headers):
+            worksheet.write(0, col, header, header_format)
+        
+        # ضبط عرض الأعمدة
+        worksheet.set_column(0, 0, 10)  # رقم البلاغ
+        worksheet.set_column(1, 1, 15)  # النوع
+        worksheet.set_column(2, 2, 25)  # اسم النصاب
+        worksheet.set_column(3, 3, 20)  # رقم الهاتف
+        worksheet.set_column(4, 14, 20)  # المحافظ والحسابات
+        worksheet.set_column(15, 15, 15)  # تاريخ المديونية
+        worksheet.set_column(16, 16, 40)  # الوصف
+        worksheet.set_column(17, 17, 15)  # المستخدم
+        worksheet.set_column(18, 18, 20)  # تاريخ الإنشاء
+        worksheet.set_column(19, 19, 40)  # الحقول المخصصة
+        
+        # كتابة البيانات
+        for row, report in enumerate(reports, start=1):
+            # تحديد التنسيق بناءً على نوع البلاغ
+            format_to_use = scammer_format if report.type == 'scammer' else debt_format
+            
+            # تحضير البيانات
+            user = User.query.get(report.user_id)
+            username = user.username if user else "غير معروف"
+            
+            # تقسيم البيانات المتعددة
+            scammer_names = report.scammer_name.split('|') if report.scammer_name else []
+            scammer_name = scammer_names[0] if scammer_names else ""
+            
+            scammer_phones = report.scammer_phone.split('|') if report.scammer_phone else []
+            scammer_phone = scammer_phones[0] if scammer_phones else ""
+            
+            wallet_addresses = report.wallet_address.split('|') if report.wallet_address else []
+            wallet_address = wallet_addresses[0] if wallet_addresses else ""
+            
+            network_types = report.network_type.split('|') if report.network_type else []
+            network_type = network_types[0] if network_types else ""
+            
+            # تنسيق التواريخ
+            created_at = report.created_at.strftime('%Y-%m-%d %H:%M') if report.created_at else ""
+            debt_date = report.debt_date.strftime('%Y-%m-%d') if report.debt_date else ""
+            
+            # كتابة البيانات في الصفوف
+            data = [
+                report.id,
+                'نصاب' if report.type == 'scammer' else 'مديونية',
+                scammer_name,
+                scammer_phone,
+                wallet_address,
+                network_type,
+                report.paypal or "",
+                report.payer or "",
+                report.perfect_money or "",
+                report.alkremi_bank or "",
+                report.jeeb_wallet or "",
+                report.jawali_wallet or "",
+                report.cash_wallet or "",
+                report.one_cash or "",
+                report.debt_amount or "",
+                debt_date,
+                report.description or "",
+                username,
+                created_at,
+                report.custom_fields or ""
+            ]
+            
+            for col, value in enumerate(data):
+                worksheet.write(row, col, value, format_to_use)
+        
+        workbook.close()
+        
+        # إعادة مؤشر الملف إلى البداية
+        output.seek(0)
+        
+        # إرسال الملف للتنزيل
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    except Exception as e:
+        flash(f'حدث خطأ أثناء تصدير البلاغات: {str(e)}', 'danger')
+        return redirect(url_for('admin_reports'))
 
 @app.route('/admin/reports/import', methods=['GET', 'POST'])
 @login_required
@@ -1103,6 +1112,7 @@ def import_reports_excel():
         
         try:
             # قراءة ملف الإكسل
+            import pandas as pd  # تأجيل استيراد pandas حتى نحتاجه فعلياً
             df = pd.read_excel(file)
             
             # التحقق من وجود الأعمدة المطلوبة

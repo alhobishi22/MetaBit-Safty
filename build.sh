@@ -6,6 +6,9 @@ set -o errexit
 python --version
 echo "Installing dependencies..."
 
+# تثبيت numpy أولاً بالإصدار المحدد
+pip install numpy==1.24.3
+
 # Install Python dependencies
 pip install -r requirements.txt
 
@@ -13,7 +16,7 @@ pip install -r requirements.txt
 pip install gunicorn gevent
 
 # List installed packages for debugging
-pip list
+pip list | grep -E 'numpy|pandas'
 
 # Initialize the database
 python init_db.py
