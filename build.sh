@@ -18,11 +18,18 @@ pip install gunicorn gevent psycopg2-binary
 # List installed packages for debugging
 pip list | grep -E 'numpy|pandas|psycopg2'
 
-# إعداد قاعدة البيانات PostgreSQL
-python init_postgres.py
+# تهيئة ترحيلات قاعدة البيانات إذا لم تكن موجودة
+if [ ! -d "migrations" ]; then
+    echo "Initializing database migrations..."
+    flask db init
+fi
 
 # Run database migrations
+flask db migrate -m "تحديث هيكل قاعدة البيانات لدعم PostgreSQL"
 flask db upgrade
+
+# إعداد قاعدة البيانات PostgreSQL
+python init_postgres.py
 
 # Create admin user
 python create_admin.py
