@@ -3,6 +3,7 @@ services:
     name: metabit-safety
     env: python
     buildCommand: ./build.sh
+<<<<<<< HEAD
     startCommand: ./start.sh
     plan: free
     autoDeploy: true
@@ -23,9 +24,24 @@ services:
         value: false
       - key: FLASK_APP
         value: app.py
+=======
+    startCommand: gunicorn wsgi:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: metabit-safety-db
+          property: connectionString
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
 
 databases:
   - name: metabit-safety-db
     databaseName: metabit_safety
     user: metabit_safety_user
+<<<<<<< HEAD
     plan: free
+=======
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858

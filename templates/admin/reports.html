@@ -5,9 +5,12 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0"><i class="fas fa-flag me-2"></i>إدارة البلاغات</h2>
         <div>
+<<<<<<< HEAD
             <a href="{{ url_for('import_reports_excel') }}" class="btn btn-primary">
                 <i class="fas fa-file-import me-1"></i> استيراد البلاغات
             </a>
+=======
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
             <a href="{{ url_for('export_reports_excel', type=report_type) }}" class="btn btn-success">
                 <i class="fas fa-file-excel me-1"></i> تصدير إلى إكسل
             </a>
@@ -56,16 +59,25 @@
                         </tr>
                     </thead>
                     <tbody>
+<<<<<<< HEAD
                         {% for item in reports %}
                         <tr>
                             <th scope="row">{{ item.report.id }}</th>
                             <td>
                                 {% if item.report.type == 'scammer' %}
+=======
+                        {% for report in reports %}
+                        <tr>
+                            <th scope="row">{{ report.id }}</th>
+                            <td>
+                                {% if report.type == 'scammer' %}
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                 <span class="badge bg-danger">نصاب</span>
                                 {% else %}
                                 <span class="badge bg-warning">مديونية</span>
                                 {% endif %}
                             </td>
+<<<<<<< HEAD
                             <td>{{ item.report.scammer_name.split('|')[0] }}</td>
                             <td>{{ item.report.scammer_phone.split('|')[0] }}</td>
                             <td>
@@ -78,11 +90,26 @@
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteReportModal{{ item.report.id }}" title="حذف البلاغ">
+=======
+                            <td>{{ report.scammer_name.split('|')[0] }}</td>
+                            <td>{{ report.scammer_phone.split('|')[0] }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ report.user.username }}</span>
+                            </td>
+                            <td>{{ report.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('view_report', id=report.id) }}" class="btn btn-sm btn-primary" title="عرض البلاغ">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteReportModal{{ report.id }}" title="حذف البلاغ">
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                 </div>
                                 
                                 <!-- Delete Report Modal -->
+<<<<<<< HEAD
                                 <div class="modal fade" id="deleteReportModal{{ item.report.id }}" tabindex="-1" aria-labelledby="deleteReportModalLabel{{ item.report.id }}" aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
@@ -92,6 +119,17 @@
                                             </div>
                                             <div class="modal-body">
                                                 <p>هل أنت متأكد من حذف البلاغ رقم <strong>#{{ item.report.id }}</strong>؟</p>
+=======
+                                <div class="modal fade" id="deleteReportModal{{ report.id }}" tabindex="-1" aria-labelledby="deleteReportModalLabel{{ report.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-danger text-white">
+                                                <h5 class="modal-title" id="deleteReportModalLabel{{ report.id }}">تأكيد حذف البلاغ</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>هل أنت متأكد من حذف البلاغ رقم <strong>#{{ report.id }}</strong>؟</p>
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                                 <div class="alert alert-warning">
                                                     <i class="fas fa-exclamation-triangle me-2"></i>
                                                     سيتم حذف جميع الملفات المرفقة بهذا البلاغ.
@@ -99,7 +137,11 @@
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+<<<<<<< HEAD
                                                 <form action="{{ url_for('admin_delete_report', report_id=item.report.id) }}" method="post">
+=======
+                                                <form action="{{ url_for('admin_delete_report', id=report.id) }}" method="post">
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                                     <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
                                                 </form>
                                             </div>

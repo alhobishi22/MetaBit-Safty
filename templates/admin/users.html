@@ -4,12 +4,16 @@
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0"><i class="fas fa-users me-2"></i>إدارة المستخدمين</h2>
+<<<<<<< HEAD
         <div>
             <a href="{{ url_for('admin_add_user') }}" class="btn btn-success">
                 <i class="fas fa-user-plus me-2"></i>إضافة مستخدم جديد
             </a>
             <span class="badge bg-primary fs-5 ms-2">{{ users|length }} مستخدم</span>
         </div>
+=======
+        <span class="badge bg-primary fs-5">{{ users|length }} مستخدم</span>
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
     </div>
 
     <div class="card border-0 shadow-sm">

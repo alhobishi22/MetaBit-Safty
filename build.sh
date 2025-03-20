@@ -18,6 +18,7 @@ pip install gunicorn gevent psycopg2-binary
 # List installed packages for debugging
 pip list | grep -E 'numpy|pandas|psycopg2|flask-migrate'
 
+<<<<<<< HEAD
 # طباعة متغيرات البيئة (بدون كشف المعلومات الحساسة)
 echo "DATABASE_URL exists: ${DATABASE_URL:+yes}"
 if [ -n "$DATABASE_URL" ]; then
@@ -29,12 +30,15 @@ fi
 echo "Fixing database..."
 python fix_db.py
 
+=======
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
 # تهيئة ترحيلات قاعدة البيانات إذا لم تكن موجودة
 if [ ! -d "migrations" ]; then
     echo "Initializing database migrations..."
     flask db init
 fi
 
+<<<<<<< HEAD
 # Run database migrations
 echo "Running database migrations..."
 flask db migrate -m "تحديث هيكل قاعدة البيانات" || echo "Migration failed but continuing..."
@@ -42,4 +46,17 @@ flask db upgrade || echo "Upgrade failed but continuing..."
 
 # إنشاء مستخدم مشرف
 echo "Creating admin user..."
+=======
+# إنشاء جداول قاعدة البيانات مباشرة
+python -c "from app import app, db; app.app_context().push(); db.create_all()"
+
+# Run database migrations
+flask db migrate -m "تحديث هيكل قاعدة البيانات لدعم PostgreSQL"
+flask db upgrade
+
+# إعداد قاعدة البيانات PostgreSQL
+python init_postgres.py
+
+# Create admin user
+>>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
 python create_admin.py
