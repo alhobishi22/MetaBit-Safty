@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-<<<<<<< HEAD
 <div class="container py-5">
     <div class="row justify-content-center">
         <div class="col-lg-9">
@@ -216,77 +215,10 @@
                                 </div>
                             </div>
                             {% endif %}
-=======
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <!-- Back button at the top -->
-            <a href="{{ url_for('index') }}" class="btn btn-outline-primary mb-3 d-flex align-items-center" style="width: fit-content;">
-                <i class="fas fa-arrow-right ms-2"></i> رجوع للصفحة الرئيسية
-            </a>
-
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        <h3 class="mb-0">تفاصيل البلاغ</h3>
-                    </div>
-                    {% if current_user.is_authenticated and current_user.id == report.user_id %}
-                    <div>
-                        <a href="{{ url_for('edit_report', id=report.id) }}" class="btn btn-primary">
-                            <i class="fas fa-edit"></i> تعديل
-                        </a>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            <i class="fas fa-trash"></i> حذف
-                        </button>
-                    </div>
-                    {% endif %}
-                </div>
-                <div class="card-body">
-                    <!-- معلومات المبلغ -->
-                    <div class="mb-4">
-                        <h5 class="card-title mb-3">معلومات البلاغ</h5>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p>
-                                    <i class="fas fa-user text-primary"></i>
-                                    <strong>تم الإبلاغ من قبل:</strong>
-                                    {{ report.user.username }}
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p>
-                                    <i class="fas fa-flag text-danger"></i>
-                                    <strong>نوع البلاغ:</strong>
-                                    {% if report.type == 'scammer' %}
-                                        <span class="badge bg-danger">نصاب ومحتال</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark">مدين هارب</span>
-                                    {% endif %}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- معلومات المبلغ عنه -->
-                    {% if report.type == 'debt' %}
-                    <div class="alert alert-warning alert-persistent mb-4">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-money-bill-wave fa-2x me-3"></i>
-                            </div>
-                            <div>
-                                <h6 class="alert-heading mb-1">معلومات المديونية</h6>
-                                <div><strong>قيمة المديونية:</strong> {{ report.debt_amount }} ريال</div>
-                                {% if report.debt_date %}
-                                <div><strong>تاريخ المديونية:</strong> {{ report.debt_date.strftime('%Y-%m-%d') }}</div>
-                                {% endif %}
-                            </div>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                         </div>
                     </div>
                     {% endif %}
 
-<<<<<<< HEAD
                     <!-- وصف البلاغ -->
                     {% if report.description %}
                     <div class="report-section mb-4">
@@ -297,218 +229,11 @@
                         <div class="description-box p-3 bg-light rounded">
                             {{ report.description|nl2br }}
                         </div>
-=======
-                    <!-- معلومات النصاب -->
-                    <div class="mb-4">
-                        <h5 class="card-title">معلومات النصاب</h5>
-                        {% if report.scammer_name %}
-                        <div class="mb-3">
-                            <h6>الأسماء:</h6>
-                            <ul class="list-group">
-                            {% for name in report.scammer_name.split('|') %}
-                                {% if name %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span>{{ name }}
-                                    {% if duplicates and name in duplicates and duplicates[name] > 1 %}
-                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                        {{ duplicates[name] }}
-                                    </span>
-                                    {% endif %}
-                                    </span>
-                                </li>
-                                {% endif %}
-                            {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-
-                        {% if report.scammer_phone %}
-                        <div class="mb-3">
-                            <h6 class="d-flex justify-content-between align-items-center">
-                                <span>أرقام الهواتف:</span>
-                                <button class="btn btn-sm btn-outline-danger" onclick="saveAllContacts()">
-                                    <i class="fas fa-address-book me-1"></i> حفظ جميع الأرقام كجهات اتصال
-                                </button>
-                            </h6>
-                            <ul class="list-group">
-                            {% for phone in report.scammer_phone.split('|') %}
-                                {% if phone %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span>{{ phone }}</span>
-                                        {% if duplicates and phone in duplicates and duplicates[phone] > 1 %}
-                                        <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                            {{ duplicates[phone] }}
-                                        </span>
-                                        {% endif %}
-                                    </div>
-                                    <div>
-                                        <a href="tel:{{ phone }}" class="btn btn-sm btn-outline-primary me-2" title="اتصال">
-                                            <i class="fas fa-phone"></i>
-                                        </a>
-                                        <a href="vcard:{{ phone }}" class="btn btn-sm btn-outline-success" title="حفظ كجهة اتصال" 
-                                           onclick="saveContact('{{ phone }}', '{% if report.scammer_name %}{{ report.scammer_name.split('|')[0] }}{% else %}نصاب{% endif %}'); return false;">
-                                            <i class="fas fa-address-book"></i>
-                                        </a>
-                                    </div>
-                                </li>
-                                {% endif %}
-                            {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- المحافظ -->
-                    {% if report.wallet_address %}
-                    <div class="mb-4">
-                        <h5 class="card-title">المحافظ</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>عنوان المحفظة</th>
-                                        <th>نوع الشبكة</th>
-                                        <th>التكرار</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for address, network in zip(report.wallet_address.split('|'), report.network_type.split('|')) if address %}
-                                    <tr>
-                                        <td>{{ address }}</td>
-                                        <td>{{ network }}</td>
-                                        <td>
-                                            {% if duplicates and address in duplicates and duplicates[address] > 1 %}
-                                            <span class="badge rounded-pill bg-primary" title="عدد مرات التكرار في البلاغات">
-                                                {{ duplicates[address] }}
-                                            </span>
-                                            {% else %}
-                                            -
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- المحافظ والحسابات الأخرى -->
-                    <div class="mb-4">
-                        <h5 class="card-title">المحافظ والحسابات الأخرى</h5>
-                        <div class="row">
-                            {% if report.paypal %}
-                            <div class="col-md-6 mb-2">
-                                <strong>PayPal:</strong> 
-                                <span>{{ report.paypal }}
-                                {% if duplicates and report.paypal in duplicates and duplicates[report.paypal] > 1 %}
-                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                    {{ duplicates[report.paypal] }}
-                                </span>
-                                {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                            {% if report.payer %}
-                            <div class="col-md-6 mb-2">
-                                <strong>Payer:</strong> 
-                                <span>{{ report.payer }}
-                                {% if duplicates and report.payer in duplicates and duplicates[report.payer] > 1 %}
-                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                    {{ duplicates[report.payer] }}
-                                </span>
-                                {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                            {% if report.perfect_money %}
-                            <div class="col-md-6 mb-2">
-                                <strong>Perfect Money:</strong> 
-                                <span>{{ report.perfect_money }}
-                                {% if duplicates and report.perfect_money in duplicates and duplicates[report.perfect_money] > 1 %}
-                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                    {{ duplicates[report.perfect_money] }}
-                                </span>
-                                {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                            {% if report.alkremi_bank %}
-                            <div class="col-md-6 mb-2">
-                                <strong>بنك الكريمي:</strong> 
-                                <span>{{ report.alkremi_bank }}
-                                {% if duplicates and report.alkremi_bank in duplicates and duplicates[report.alkremi_bank] > 1 %}
-                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                    {{ duplicates[report.alkremi_bank] }}
-                                </span>
-                                {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                            {% if report.jeeb_wallet %}
-                            <div class="col-md-6 mb-2">
-                                <strong>محفظة جيب:</strong> 
-                                <span>{{ report.jeeb_wallet }}
-                                {% if duplicates and report.jeeb_wallet in duplicates and duplicates[report.jeeb_wallet] > 1 %}
-                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                    {{ duplicates[report.jeeb_wallet] }}
-                                </span>
-                                {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                            {% if report.jawali_wallet %}
-                            <div class="col-md-6 mb-2">
-                                <strong>محفظة جوالي:</strong> 
-                                <span>{{ report.jawali_wallet }}
-                                {% if duplicates and report.jawali_wallet in duplicates and duplicates[report.jawali_wallet] > 1 %}
-                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                    {{ duplicates[report.jawali_wallet] }}
-                                </span>
-                                {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                            {% if report.cash_wallet %}
-                            <div class="col-md-6 mb-2">
-                                <strong>محفظة كاش:</strong> 
-                                <span>{{ report.cash_wallet }}
-                                {% if duplicates and report.cash_wallet in duplicates and duplicates[report.cash_wallet] > 1 %}
-                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                    {{ duplicates[report.cash_wallet] }}
-                                </span>
-                                {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                            {% if report.one_cash %}
-                            <div class="col-md-6 mb-2">
-                                <strong>ون كاش:</strong> 
-                                <span>{{ report.one_cash }}
-                                {% if duplicates and report.one_cash in duplicates and duplicates[report.one_cash] > 1 %}
-                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                    {{ duplicates[report.one_cash] }}
-                                </span>
-                                {% endif %}
-                                </span>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- الوصف -->
-                    {% if report.description %}
-                    <div class="mb-4">
-                        <h5 class="card-title">الوصف</h5>
-                        <p class="card-text">{{ report.description }}</p>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                     </div>
                     {% endif %}
 
                     <!-- الملفات المرفقة -->
                     {% if report.media_files %}
-<<<<<<< HEAD
                     <div class="report-section mb-4">
                         <h4 class="section-title">
                             <i class="fas fa-paperclip text-primary me-2"></i>
@@ -530,29 +255,11 @@
                                     </div>
                                 </div>
                             </div>
-=======
-                    <div class="mb-4">
-                        <h5 class="card-title">الملفات المرفقة</h5>
-                        <div class="row">
-                            {% for file in report.media_files.split(',') %}
-                                {% if file %}
-                                <div class="col-md-4 mb-3">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <a href="{{ url_for('static', filename='uploads/' + file) }}" target="_blank" class="btn btn-outline-primary btn-sm">
-                                                <i class="fas fa-download"></i> تحميل الملف
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endif %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                             {% endfor %}
                         </div>
                     </div>
                     {% endif %}
 
-<<<<<<< HEAD
                     <!-- معلومات إضافية -->
                     <div class="report-section mb-4">
                         <h4 class="section-title">
@@ -602,33 +309,10 @@
                     </div>
                 </div>
             </div>
-=======
-                    <!-- تاريخ البلاغ -->
-                    <div class="text-muted mt-3">
-                        <small>
-                            <i class="fas fa-calendar"></i> تاريخ البلاغ: 
-                            {% if report.created_at %}
-                                {{ report.created_at.strftime('%Y-%m-%d %H:%M') }}
-                            {% endif %}
-                            {% if report.updated_at and report.updated_at != report.created_at %}
-                            <br>
-                            <i class="fas fa-edit"></i> آخر تحديث: {{ report.updated_at.strftime('%Y-%m-%d %H:%M') }}
-                            {% endif %}
-                        </small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Back button at the bottom -->
-            <a href="{{ url_for('index') }}" class="btn btn-outline-primary mt-3 d-flex align-items-center" style="width: fit-content;">
-                <i class="fas fa-arrow-right ms-2"></i> رجوع للصفحة الرئيسية
-            </a>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
         </div>
     </div>
 </div>
 
-<<<<<<< HEAD
 <!-- نافذة تأكيد الحذف -->
 {% if current_user.is_authenticated and (current_user.is_admin or current_user.id == report.user_id) %}
 <div class="modal fade" id="deleteReportModal" tabindex="-1" aria-labelledby="deleteReportModalLabel" aria-hidden="true">
@@ -645,212 +329,10 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
                 <form action="{{ url_for('delete_report', report_id=report.id) }}" method="POST" style="display: inline;">
                     <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
-=======
-<!-- Modal for Delete Confirmation -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">تأكيد الحذف</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                هل أنت متأكد من رغبتك في حذف هذا البلاغ؟
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <form action="{{ url_for('delete_report', id=report.id) }}" method="post">
-                    <button type="submit" class="btn btn-danger">حذف</button>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                 </form>
             </div>
         </div>
     </div>
 </div>
-<<<<<<< HEAD
 {% endif %}
-=======
-
-<!-- Modal for Contact Creation -->
-<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="contactModalLabel">حفظ جهة اتصال</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="contactForm">
-                    <div class="mb-3">
-                        <label for="contactName" class="form-label">الاسم</label>
-                        <input type="text" class="form-control" id="contactName" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contactPhone" class="form-label">رقم الهاتف</label>
-                        <input type="tel" class="form-control" id="contactPhone" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label for="contactNotes" class="form-label">ملاحظات</label>
-                        <textarea class="form-control" id="contactNotes" rows="3">تم الإبلاغ عنه كنصاب في نظام MetaBit للبلاغات</textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-success" id="downloadVcard">حفظ جهة الاتصال</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Modal for All Contacts -->
-<div class="modal fade" id="allContactsModal" tabindex="-1" aria-labelledby="allContactsModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="allContactsModalLabel">حفظ جميع جهات الاتصال</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>سيتم تنزيل ملف يحتوي على جميع أرقام النصابين المذكورة في هذا البلاغ.</p>
-                <form id="allContactsForm">
-                    <div class="mb-3">
-                        <label for="contactsPrefix" class="form-label">بادئة الاسم</label>
-                        <input type="text" class="form-control" id="contactsPrefix" value="نصاب">
-                        <small class="text-muted">سيتم إضافة هذه البادئة إلى اسم كل جهة اتصال</small>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
-                <button type="button" class="btn btn-success" id="downloadAllVcards">تنزيل جميع جهات الاتصال</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Template data for JavaScript -->
-<script id="template-data" type="application/json">
-{
-    "scammerPhone": "{{ report.scammer_phone|default('') }}",
-    "scammerName": "{{ report.scammer_name|default('') }}"
-}
-</script>
-
-<script>
-    // Get template data from the JSON script tag
-    var templateData = JSON.parse(document.getElementById('template-data').textContent);
-    var reportScammerPhone = templateData.scammerPhone;
-    var reportScammerName = templateData.scammerName;
-    
-    function saveContact(phone, name) {
-        // Set values in the modal
-        document.getElementById('contactPhone').value = phone;
-        document.getElementById('contactName').value = name ? name + ' (نصاب)' : 'نصاب';
-        
-        // Show the modal
-        var contactModal = new bootstrap.Modal(document.getElementById('contactModal'));
-        contactModal.show();
-        
-        // Handle download button click
-        document.getElementById('downloadVcard').onclick = function() {
-            var name = document.getElementById('contactName').value;
-            var phone = document.getElementById('contactPhone').value;
-            var notes = document.getElementById('contactNotes').value;
-            
-            // Create vCard content
-            var vcard = 'BEGIN:VCARD\n';
-            vcard += 'VERSION:3.0\n';
-            vcard += 'FN:' + name + '\n';
-            vcard += 'TEL;TYPE=CELL:' + phone + '\n';
-            if (notes) {
-                vcard += 'NOTE:' + notes + '\n';
-            }
-            vcard += 'END:VCARD';
-            
-            // Create download link
-            var blob = new Blob([vcard], { type: 'text/vcard' });
-            var url = URL.createObjectURL(blob);
-            var link = document.createElement('a');
-            link.href = url;
-            link.download = name + '.vcf';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Close the modal
-            contactModal.hide();
-        };
-    }
-    
-    function saveAllContacts() {
-        // Show the modal for all contacts
-        var allContactsModal = new bootstrap.Modal(document.getElementById('allContactsModal'));
-        allContactsModal.show();
-        
-        // Handle download all button click
-        document.getElementById('downloadAllVcards').onclick = function() {
-            var prefix = document.getElementById('contactsPrefix').value || 'نصاب';
-            
-            // Get all phone numbers and names from the report
-            var phones = [];
-            var names = [];
-            
-            // Extract phone numbers from the report data
-            if (reportScammerPhone) {
-                var phoneData = reportScammerPhone.split('|');
-                for (var i = 0; i < phoneData.length; i++) {
-                    if (phoneData[i].trim()) {
-                        phones.push(phoneData[i].trim());
-                    }
-                }
-            }
-            
-            // Extract names from the report data
-            if (reportScammerName) {
-                var nameData = reportScammerName.split('|');
-                for (var i = 0; i < nameData.length; i++) {
-                    if (nameData[i].trim()) {
-                        names.push(nameData[i].trim());
-                    }
-                }
-            }
-            
-            // Create a combined vCard file containing all contacts
-            if (phones.length > 0) {
-                // Create vCard for each phone
-                var allVcards = '';
-                
-                for (var i = 0; i < phones.length; i++) {
-                    var phone = phones[i];
-                    var name = (i < names.length) ? names[i] : prefix + ' ' + (i + 1);
-                    
-                    // Create vCard content
-                    var vcard = 'BEGIN:VCARD\n';
-                    vcard += 'VERSION:3.0\n';
-                    vcard += 'FN:' + name + ' (' + prefix + ')\n';
-                    vcard += 'TEL;TYPE=CELL:' + phone + '\n';
-                    vcard += 'NOTE:تم الإبلاغ عنه كنصاب في نظام MetaBit للبلاغات\n';
-                    vcard += 'END:VCARD\n';
-                    
-                    allVcards += vcard;
-                }
-                
-                // Create download link for all vCards
-                var blob = new Blob([allVcards], { type: 'text/vcard' });
-                var url = URL.createObjectURL(blob);
-                var link = document.createElement('a');
-                link.href = url;
-                link.download = 'جميع_النصابين.vcf';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            }
-            
-            // Close the modal
-            allContactsModal.hide();
-        };
-    }
-</script>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
 {% endblock %}

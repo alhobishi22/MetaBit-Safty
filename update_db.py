@@ -1,13 +1,8 @@
-<<<<<<< HEAD
 from app import app, db, User, Report
-=======
-from app import app, db, User
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
 from sqlalchemy import text
 
 def update_database():
     with app.app_context():
-<<<<<<< HEAD
         # إضافة عمود custom_fields إلى جدول report
         try:
             with db.engine.connect() as conn:
@@ -35,21 +30,6 @@ def update_database():
                 print(f"تم ترقية المستخدم '{first_user.username}' ليصبح مشرفًا")
             else:
                 print(f"المستخدم '{first_user.username}' مشرف بالفعل")
-=======
-        # Add the is_admin column to the user table
-        with db.engine.connect() as conn:
-            conn.execute(text('ALTER TABLE user ADD COLUMN is_admin BOOLEAN DEFAULT 0'))
-            conn.commit()
-        print("تم تحديث قاعدة البيانات بنجاح وإضافة حقل is_admin")
-        
-        # يمكنك ترقية مستخدم ليصبح مشرفًا هنا
-        # على سبيل المثال، ترقية المستخدم الأول
-        first_user = User.query.first()
-        if first_user:
-            first_user.is_admin = True
-            db.session.commit()
-            print(f"تم ترقية المستخدم '{first_user.username}' ليصبح مشرفًا")
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
         else:
             print("لم يتم العثور على أي مستخدمين في قاعدة البيانات")
 

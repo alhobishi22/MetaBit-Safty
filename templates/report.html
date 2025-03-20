@@ -135,7 +135,6 @@
                             </div>
                         </div>
 
-<<<<<<< HEAD
                         <!-- حقول مخصصة -->
                         <div class="card bg-light border-0 p-4 mb-4">
                             <h5 class="card-title mb-4">
@@ -154,8 +153,6 @@
                             </div>
                         </div>
 
-=======
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                         <!-- معلومات المديونية -->
                         <div class="card bg-light border-0 p-4 mb-4 debt-info" style="display: none;">
                             <h5 class="card-title mb-4">
@@ -462,7 +459,6 @@ function addWalletInfo() {
     }, 10);
 }
 
-<<<<<<< HEAD
 // إضافة حقل مخصص جديد
 function addCustomField() {
     const container = document.getElementById('customFieldsContainer');
@@ -499,13 +495,10 @@ function addCustomField() {
     }, 10);
 }
 
-=======
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
 // تفعيل التحقق من صحة النموذج
 (function () {
     'use strict'
     var forms = document.querySelectorAll('.needs-validation')
-<<<<<<< HEAD
     Array.prototype.slice.call(forms)
         .forEach(function (form) {
             form.addEventListener('submit', function (event) {
@@ -516,17 +509,6 @@ function addCustomField() {
                 form.classList.add('was-validated')
             }, false)
         })
-=======
-    Array.prototype.slice.call(forms).forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-                event.preventDefault()
-                event.stopPropagation()
-            }
-            form.classList.add('was-validated')
-        }, false)
-    })
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
 })()
 </script>
 {% endblock %}

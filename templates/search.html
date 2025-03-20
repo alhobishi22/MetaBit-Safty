@@ -20,20 +20,11 @@
                         </div>
                         <div class="col-md-4">
                             <div class="form-floating">
-<<<<<<< HEAD
                                 <select name="type" class="form-select form-select-lg h-100">
                                     <option value="all" {% if report_type == 'all' %}selected{% endif %}>جميع البلاغات</option>
                                     <option value="scammer" {% if report_type == 'scammer' %}selected{% endif %}>بلاغات النصب</option>
                                     <option value="debt" {% if report_type == 'debt' %}selected{% endif %}>بلاغات المديونية</option>
                                 </select>
-=======
-                                <select name="type" class="form-select form-select-lg" id="searchType">
-                                    <option value="all" {% if type_filter == 'all' %}selected{% endif %}>جميع البلاغات</option>
-                                    <option value="scammer" {% if type_filter == 'scammer' %}selected{% endif %}>نصاب ومحتال</option>
-                                    <option value="debt" {% if type_filter == 'debt' %}selected{% endif %}>مدين هارب</option>
-                                </select>
-                                <label for="searchType">نوع البلاغ</label>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                             </div>
                         </div>
                         <div class="col-12">
@@ -59,7 +50,6 @@
     </div>
 </div>
 
-<<<<<<< HEAD
 <!-- زر تحميل جميع جهات الاتصال من نتائج البحث -->
 <div class="row justify-content-center mb-4">
     <div class="col-md-8">
@@ -74,12 +64,6 @@
     {% if results %}
         <div class="row">
             {% for result in results %}
-=======
-{% if query %}
-    {% if reports %}
-        <div class="row">
-            {% for report in reports %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
             <div class="col-md-12 mb-4">
                 <div class="card shadow-sm border-0 rounded-4 h-100 report-card">
                     <div class="card-body p-4">
@@ -87,15 +71,9 @@
                             <div>
                                 <h5 class="card-title mb-1">
                                     <small class="text-muted">تم الإبلاغ من قبل:</small><br>
-<<<<<<< HEAD
                                     {{ result.username }}
                                 </h5>
                                 {% if result.type == 'scammer' %}
-=======
-                                    {{ report.user.username }}
-                                </h5>
-                                {% if report.type == 'scammer' %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                     <span class="badge bg-danger">
                                         <i class="fas fa-exclamation-triangle me-1"></i>
                                         نصاب ومحتال
@@ -110,24 +88,15 @@
                             <div class="text-muted">
                                 <small>
                                     <i class="far fa-calendar-alt me-1"></i>
-<<<<<<< HEAD
                                     {% if result.created_at %}
                                         {{ result.created_at.strftime('%Y-%m-%d') }}
-=======
-                                    {% if report.created_at %}
-                                        {{ report.created_at.strftime('%Y-%m-%d') }}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                     {% endif %}
                                 </small>
                             </div>
                         </div>
 
                         <!-- معلومات الدين -->
-<<<<<<< HEAD
                         {% if result.type == 'debt' and result.debt_amount %}
-=======
-                        {% if report.type == 'debt' and report.debt_amount %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                         <div class="alert alert-warning alert-persistent mb-4">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
@@ -135,15 +104,9 @@
                                 </div>
                                 <div>
                                     <h6 class="alert-heading mb-1">معلومات الدين</h6>
-<<<<<<< HEAD
                                     <div><strong>المبلغ:</strong> {{ result.debt_amount }} ريال</div>
                                     {% if result.debt_date %}
                                     <div><strong>تاريخ الدين:</strong> {{ result.debt_date.strftime('%Y-%m-%d') }}</div>
-=======
-                                    <div><strong>المبلغ:</strong> {{ report.debt_amount }} ريال</div>
-                                    {% if report.debt_date %}
-                                    <div><strong>تاريخ الدين:</strong> {{ report.debt_date.strftime('%Y-%m-%d') }}</div>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                     {% endif %}
                                 </div>
                             </div>
@@ -157,21 +120,12 @@
                                 معلومات الشخص
                             </h6>
                             <div class="row">
-<<<<<<< HEAD
                                 {% if result.scammer_name %}
                                 <div class="col-md-6">
                                     <div class="info-item">
                                         <strong>الاسم:</strong>
                                         <span class="text-danger scammer-name">
                                             {% for name in result.scammer_name.split('|') %}
-=======
-                                {% if report.scammer_name %}
-                                <div class="col-md-6">
-                                    <div class="info-item">
-                                        <strong>الاسم:</strong>
-                                        <span class="text-danger">
-                                            {% for name in report.scammer_name.split('|') %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                                 {% set name_stripped = name.strip() %}
                                                 {% if name_stripped %}
                                                     {{ name_stripped }}
@@ -187,22 +141,13 @@
                                     </div>
                                 </div>
                                 {% endif %}
-<<<<<<< HEAD
                                 {% if result.scammer_phone %}
-=======
-                                {% if report.scammer_phone %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                 <div class="col-md-6">
                                     <div class="info-item d-flex justify-content-between align-items-center">
                                         <div>
                                             <strong>رقم الهاتف:</strong>
-<<<<<<< HEAD
                                             <span class="phone-number text-danger">
                                                 {% for phone in result.scammer_phone.split('|') %}
-=======
-                                            <span class="text-danger">
-                                                {% for phone in report.scammer_phone.split('|') %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                                     {% set phone_stripped = phone.strip() %}
                                                     {% if phone_stripped %}
                                                         {{ phone_stripped }}
@@ -217,18 +162,13 @@
                                             </span>
                                         </div>
                                         <div>
-<<<<<<< HEAD
                                             <button class="btn btn-sm btn-outline-success" onclick="saveContact('{{ result.scammer_phone.split('|')[0] }}', '{% if result.scammer_name %}{{ result.scammer_name.split('|')[0] }}{% else %}نصاب{% endif %}')">
-=======
-                                            <button class="btn btn-sm btn-outline-success" onclick="saveContact('{{ report.scammer_phone.split('|')[0] }}', '{% if report.scammer_name %}{{ report.scammer_name.split('|')[0] }}{% else %}نصاب{% endif %}')">
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                                 <i class="fas fa-address-card me-1"></i> حفظ كجهة اتصال
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                                 {% endif %}
-<<<<<<< HEAD
                                 {% if result.debtor_name %}
                                 <div class="col-md-6">
                                     <div class="info-item">
@@ -248,37 +188,23 @@
                                     </div>
                                 </div>
                                 {% endif %}
-=======
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                             </div>
                         </div>
 
                         <!-- معلومات المحفظة -->
-<<<<<<< HEAD
                         {% if result.wallet_address %}
-=======
-                        {% if report.wallet_address %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                         <div class="info-section mb-4">
                             <h6 class="section-title">
                                 <i class="fas fa-coins me-2"></i>
                                 معلومات المحفظة
                             </h6>
                             <div class="row">
-<<<<<<< HEAD
                                 {% if result.wallet_address %}
-=======
-                                {% if report.wallet_address %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                 <div class="col-md-6">
                                     <div class="info-item">
                                         <strong>عنوان المحفظة:</strong>
                                         <span class="text-danger">
-<<<<<<< HEAD
                                             {% for wallet in result.wallet_address.split('|') %}
-=======
-                                            {% for wallet in report.wallet_address.split('|') %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                                 {% set wallet_stripped = wallet.strip() %}
                                                 {% if wallet_stripped %}
                                                     {{ wallet_stripped }}
@@ -294,19 +220,11 @@
                                     </div>
                                 </div>
                                 {% endif %}
-<<<<<<< HEAD
                                 {% if result.network_type %}
                                 <div class="col-md-6">
                                     <div class="info-item">
                                         <strong>نوع الشبكة:</strong>
                                         <span>{{ result.network_type }}</span>
-=======
-                                {% if report.network_type %}
-                                <div class="col-md-6">
-                                    <div class="info-item">
-                                        <strong>نوع الشبكة:</strong>
-                                        <span>{{ report.network_type }}</span>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                     </div>
                                 </div>
                                 {% endif %}
@@ -315,27 +233,18 @@
                         {% endif %}
 
                         <!-- المحافظ الرقمية العالمية -->
-<<<<<<< HEAD
                         {% if result.paypal or result.payer or result.perfect_money %}
-=======
-                        {% if report.paypal or report.payer or report.perfect_money %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                         <div class="info-section mb-4">
                             <h6 class="section-title">
                                 <i class="fas fa-globe me-2"></i>
                                 المحافظ الرقمية العالمية
                             </h6>
                             <div class="row">
-<<<<<<< HEAD
                                 {% if result.paypal %}
-=======
-                                {% if report.paypal %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>PayPal:</strong>
                                         <span class="text-danger">
-<<<<<<< HEAD
                                             {% if result.paypal.strip() %}
                                                 {{ result.paypal }}
                                                 {% if duplicates and result.paypal in duplicates and duplicates[result.paypal] > 1 %}
@@ -345,28 +254,16 @@
                                                 {% endif %}
                                             {% else %}
                                                 <span class="text-muted">لا يوجد</span>
-=======
-                                            {{ report.paypal }}
-                                            {% if duplicates and report.paypal in duplicates and duplicates[report.paypal] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.paypal] }}
-                                                </span>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                             {% endif %}
                                         </span>
                                     </div>
                                 </div>
                                 {% endif %}
-<<<<<<< HEAD
                                 {% if result.payer %}
-=======
-                                {% if report.payer %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>Payer:</strong>
                                         <span class="text-danger">
-<<<<<<< HEAD
                                             {% if result.payer.strip() %}
                                                 {{ result.payer }}
                                                 {% if duplicates and result.payer in duplicates and duplicates[result.payer] > 1 %}
@@ -376,28 +273,16 @@
                                                 {% endif %}
                                             {% else %}
                                                 <span class="text-muted">لا يوجد</span>
-=======
-                                            {{ report.payer }}
-                                            {% if duplicates and report.payer in duplicates and duplicates[report.payer] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.payer] }}
-                                                </span>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                             {% endif %}
                                         </span>
                                     </div>
                                 </div>
                                 {% endif %}
-<<<<<<< HEAD
                                 {% if result.perfect_money %}
-=======
-                                {% if report.perfect_money %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>Perfect Money:</strong>
                                         <span class="text-danger">
-<<<<<<< HEAD
                                             {% if result.perfect_money.strip() %}
                                                 {{ result.perfect_money }}
                                                 {% if duplicates and result.perfect_money in duplicates and duplicates[result.perfect_money] > 1 %}
@@ -407,13 +292,6 @@
                                                 {% endif %}
                                             {% else %}
                                                 <span class="text-muted">لا يوجد</span>
-=======
-                                            {{ report.perfect_money }}
-                                            {% if duplicates and report.perfect_money in duplicates and duplicates[report.perfect_money] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.perfect_money] }}
-                                                </span>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                             {% endif %}
                                         </span>
                                     </div>
@@ -424,27 +302,18 @@
                         {% endif %}
 
                         <!-- المحافظ المحلية -->
-<<<<<<< HEAD
                         {% if result.alkremi_bank or result.jeeb_wallet or result.jawali_wallet or result.cash_wallet or result.one_cash %}
-=======
-                        {% if report.alkremi_bank or report.jeeb_wallet or report.jawali_wallet or report.cash_wallet or report.one_cash %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                         <div class="info-section mb-4">
                             <h6 class="section-title">
                                 <i class="fas fa-wallet me-2"></i>
                                 المحافظ والحسابات المحلية
                             </h6>
                             <div class="row">
-<<<<<<< HEAD
                                 {% if result.alkremi_bank %}
-=======
-                                {% if report.alkremi_bank %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                 <div class="col-md-4">
                                     <div class="info-item">
                                         <strong>بنك الكريمي:</strong>
                                         <span class="text-danger">
-<<<<<<< HEAD
                                             {% if result.alkremi_bank.strip() %}
                                                 {{ result.alkremi_bank }}
                                                 {% if duplicates and result.alkremi_bank in duplicates and duplicates[result.alkremi_bank] > 1 %}
@@ -556,87 +425,16 @@
                                             {% if field_value in duplicates and duplicates[field_value] > 1 %}
                                                 <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
                                                     {{ duplicates[field_value] }}
-=======
-                                            {{ report.alkremi_bank }}
-                                            {% if duplicates and report.alkremi_bank in duplicates and duplicates[report.alkremi_bank] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.alkremi_bank] }}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                                 </span>
                                             {% endif %}
                                         </span>
                                     </div>
                                 </div>
-<<<<<<< HEAD
                                 {% endfor %}
-=======
-                                {% endif %}
-                                {% if report.jeeb_wallet %}
-                                <div class="col-md-4">
-                                    <div class="info-item">
-                                        <strong>محفظة جيب:</strong>
-                                        <span class="text-danger">
-                                            {{ report.jeeb_wallet }}
-                                            {% if duplicates and report.jeeb_wallet in duplicates and duplicates[report.jeeb_wallet] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.jeeb_wallet] }}
-                                                </span>
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                </div>
-                                {% endif %}
-                                {% if report.jawali_wallet %}
-                                <div class="col-md-4">
-                                    <div class="info-item">
-                                        <strong>محفظة جوالي:</strong>
-                                        <span class="text-danger">
-                                            {{ report.jawali_wallet }}
-                                            {% if duplicates and report.jawali_wallet in duplicates and duplicates[report.jawali_wallet] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.jawali_wallet] }}
-                                                </span>
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                </div>
-                                {% endif %}
-                                {% if report.cash_wallet %}
-                                <div class="col-md-4">
-                                    <div class="info-item">
-                                        <strong>محفظة كاش:</strong>
-                                        <span class="text-danger">
-                                            {{ report.cash_wallet }}
-                                            {% if duplicates and report.cash_wallet in duplicates and duplicates[report.cash_wallet] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.cash_wallet] }}
-                                                </span>
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                </div>
-                                {% endif %}
-                                {% if report.one_cash %}
-                                <div class="col-md-4">
-                                    <div class="info-item">
-                                        <strong>ون كاش:</strong>
-                                        <span class="text-danger">
-                                            {{ report.one_cash }}
-                                            {% if duplicates and report.one_cash in duplicates and duplicates[report.one_cash] > 1 %}
-                                                <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                    {{ duplicates[report.one_cash] }}
-                                                </span>
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                </div>
-                                {% endif %}
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                             </div>
                         </div>
                         {% endif %}
 
-<<<<<<< HEAD
                         {% if result.description %}
                         <div class="info-section">
                             <h6 class="section-title">
@@ -646,24 +444,11 @@
                             <div class="report-description">
                                 {{ result.description|nl2br|safe }}
                             </div>
-=======
-                        {% if report.description %}
-                        <div class="info-section">
-                            <h6 class="section-title">
-                                <i class="fas fa-info-circle me-2"></i>
-                                تفاصيل البلاغ
-                            </h6>
-                            <p class="mb-0">{{ report.description }}</p>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                         </div>
                         {% endif %}
 
                         <div class="mt-4">
-<<<<<<< HEAD
                             <a href="{{ url_for('view_report', report_id=result.id) }}" class="btn btn-outline-primary">
-=======
-                            <a href="{{ url_for('view_report', id=report.id) }}" class="btn btn-outline-primary">
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                                 <i class="fas fa-eye me-2"></i>
                                 عرض التفاصيل الكاملة
                             </a>
@@ -701,7 +486,6 @@
                         <input type="tel" class="form-control" id="contactPhone" readonly>
                     </div>
                     <div class="mb-3">
-<<<<<<< HEAD
                         <label for="contactPrefix" class="form-label">بادئة الاسم</label>
                         <input type="text" class="form-control" id="contactPrefix" value="نصاب">
                         <small class="text-muted">سيتم إضافة هذه البادئة إلى اسم جهة الاتصال</small>
@@ -709,10 +493,6 @@
                     <div class="mb-3">
                         <label for="contactNotes" class="form-label">ملاحظات</label>
                         <textarea class="form-control" id="contactNotes" rows="3">تم الإبلاغ عنه كنصاب في نظام البلاغات</textarea>
-=======
-                        <label for="contactNotes" class="form-label">ملاحظات</label>
-                        <textarea class="form-control" id="contactNotes" rows="3">تم الإبلاغ عنه كنصاب في نظام MetaBit للبلاغات</textarea>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                     </div>
                 </form>
             </div>
@@ -729,11 +509,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-<<<<<<< HEAD
                 <h5 class="modal-title" id="allSearchContactsModalLabel">حفظ جميع جهات الاتصال من نتائج البحث</h5>
-=======
-                <h5 class="modal-title" id="allSearchContactsModalLabel">حفظ جميع جهات الاتصال من البحث</h5>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -793,7 +569,6 @@
 <script src="{{ url_for('static', filename='js/search-highlight.js') }}"></script>
 
 <script>
-<<<<<<< HEAD
     // وظيفة مساعدة لعرض رسائل الإشعار بدون عنوان الموقع
     function showAlert(message) {
         // إنشاء عنصر div للإشعار
@@ -1153,205 +928,12 @@
         document.getElementById('downloadAllDatabaseVcards').onclick = downloadAllContactsFromDatabase;
         
         // إبراز نتائج البحث
-=======
-    function saveContact(phone, name) {
-        // Set values in the modal
-        document.getElementById('contactPhone').value = phone;
-        document.getElementById('contactName').value = name ? name + ' (نصاب)' : 'نصاب';
-        
-        // Show the modal
-        var contactModal = new bootstrap.Modal(document.getElementById('contactModal'));
-        contactModal.show();
-        
-        // Handle download button click
-        document.getElementById('downloadVcard').onclick = function() {
-            var name = document.getElementById('contactName').value;
-            var phone = document.getElementById('contactPhone').value;
-            var notes = document.getElementById('contactNotes').value;
-            
-            // Create vCard content
-            var vcard = 'BEGIN:VCARD\n';
-            vcard += 'VERSION:3.0\n';
-            vcard += 'FN:' + name + '\n';
-            vcard += 'TEL;TYPE=CELL:' + phone + '\n';
-            if (notes) {
-                vcard += 'NOTE:' + notes + '\n';
-            }
-            vcard += 'END:VCARD';
-            
-            // Create download link
-            var blob = new Blob([vcard], { type: 'text/vcard' });
-            var url = URL.createObjectURL(blob);
-            var link = document.createElement('a');
-            link.href = url;
-            link.download = name + '.vcf';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Close the modal
-            contactModal.hide();
-        };
-    }
-    
-    function downloadAllContactsFromDatabase() {
-        // Show the modal for all database contacts
-        var allDatabaseContactsModal = new bootstrap.Modal(document.getElementById('allDatabaseContactsModal'));
-        allDatabaseContactsModal.show();
-        
-        // Handle download all button click
-        document.getElementById('downloadAllDatabaseVcards').onclick = function() {
-            var prefix = document.getElementById('databaseContactsPrefix').value || 'نصاب';
-            
-            // Show loading spinner
-            document.getElementById('loadingSpinner').classList.remove('d-none');
-            
-            // Fetch all contacts from the server
-            fetch('/get_all_contacts')
-                .then(response => response.json())
-                .then(contacts => {
-                    // Create a combined vCard file containing all contacts
-                    if (contacts.length > 0) {
-                        // Create vCard for each contact
-                        var allVcards = '';
-                        
-                        for (var i = 0; i < contacts.length; i++) {
-                            var contact = contacts[i];
-                            
-                            // Create vCard content
-                            var vcard = 'BEGIN:VCARD\n';
-                            vcard += 'VERSION:3.0\n';
-                            vcard += 'FN:' + contact.name + ' (' + prefix + ')\n';
-                            vcard += 'TEL;TYPE=CELL:' + contact.phone + '\n';
-                            vcard += 'NOTE:تم الإبلاغ عنه كنصاب في نظام MetaBit للبلاغات\n';
-                            vcard += 'END:VCARD\n';
-                            
-                            allVcards += vcard;
-                        }
-                        
-                        // Create download link for all vCards
-                        var blob = new Blob([allVcards], { type: 'text/vcard' });
-                        var url = URL.createObjectURL(blob);
-                        var link = document.createElement('a');
-                        link.href = url;
-                        link.download = 'جميع_النصابين_من_قاعدة_البيانات.vcf';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        
-                        // Show success message
-                        alert('تم تنزيل ' + contacts.length + ' جهة اتصال بنجاح');
-                    } else {
-                        alert('لم يتم العثور على أرقام هواتف في قاعدة البيانات');
-                    }
-                    
-                    // Hide loading spinner
-                    document.getElementById('loadingSpinner').classList.add('d-none');
-                    
-                    // Close the modal
-                    allDatabaseContactsModal.hide();
-                })
-                .catch(error => {
-                    console.error('Error fetching contacts:', error);
-                    alert('حدث خطأ أثناء تحميل جهات الاتصال');
-                    
-                    // Hide loading spinner
-                    document.getElementById('loadingSpinner').classList.add('d-none');
-                });
-        };
-    }
-    
-    // دالة مباشرة لإبراز كلمات البحث
-    document.addEventListener('DOMContentLoaded', function() {
-        // الحصول على استعلام البحث من عنوان URL
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
         const urlParams = new URLSearchParams(window.location.search);
         const searchQuery = urlParams.get('q');
         
         if (searchQuery && searchQuery.trim() !== '') {
-<<<<<<< HEAD
             // البحث في جميع عناصر النص في الصفحة
             const allTextElements = document.querySelectorAll('.report-card .info-item span:not(strong), .report-card td, .description-text');
-=======
-            console.log('البحث عن:', searchQuery);
-            
-            // تقسيم استعلام البحث إلى كلمات
-            const searchTerms = searchQuery.trim().split(/\s+/).filter(term => term.length > 0);
-            
-            // إنشاء نمط للبحث
-            const searchPattern = new RegExp('(' + searchTerms.map(term => 
-                term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            ).join('|') + ')', 'gi');
-            
-            // البحث في جميع عناصر النص في الصفحة
-            const allTextElements = document.querySelectorAll('.report-card .info-item span:not(strong), .report-card td, .description-text');
-            let highlightCount = 0;
-            
-            // قائمة بالعناصر التي لا نريد إبرازها
-            const excludedElements = ['strong', 'label', 'h5', 'h6', 'th'];
-            
-            // وظيفة لإبراز النص داخل عنصر
-            function highlightText(element) {
-                // تجاهل العناصر غير النصية
-                if (element.tagName === 'BUTTON' || element.tagName === 'INPUT' || 
-                    element.tagName === 'SELECT' || element.tagName === 'TEXTAREA' ||
-                    element.tagName === 'SCRIPT' || element.tagName === 'STYLE' ||
-                    excludedElements.includes(element.tagName.toLowerCase())) {
-                    return;
-                }
-                
-                // تجاهل العناصر التي هي عناوين أو تسميات
-                if (element.parentElement && excludedElements.includes(element.parentElement.tagName.toLowerCase())) {
-                    return;
-                }
-                
-                // إذا كان العنصر يحتوي على نص فقط
-                if (element.childNodes.length === 1 && element.childNodes[0].nodeType === Node.TEXT_NODE) {
-                    const text = element.textContent;
-                    if (searchPattern.test(text)) {
-                        // إعادة ضبط النمط لتجنب مشاكل lastIndex
-                        searchPattern.lastIndex = 0;
-                        
-                        // استبدال النص بنفس النص مع إضافة تنسيق للكلمات المطابقة
-                        element.innerHTML = text.replace(searchPattern, 
-                            '<mark class="metabit-highlight">$1</mark>'
-                        );
-                        
-                        highlightCount++;
-                    }
-                }
-                // إذا كان العنصر يحتوي على عناصر فرعية
-                else {
-                    // البحث في عقد النص المباشرة
-                    for (let i = 0; i < element.childNodes.length; i++) {
-                        const node = element.childNodes[i];
-                        
-                        // إذا كانت عقدة نص
-                        if (node.nodeType === Node.TEXT_NODE) {
-                            const text = node.textContent;
-                            if (searchPattern.test(text)) {
-                                // إعادة ضبط النمط
-                                searchPattern.lastIndex = 0;
-                                
-                                // إنشاء عنصر مؤقت
-                                const tempSpan = document.createElement('span');
-                                tempSpan.innerHTML = text.replace(searchPattern, 
-                                    '<mark class="metabit-highlight">$1</mark>'
-                                );
-                                
-                                // استبدال عقدة النص بالعنصر الجديد
-                                element.replaceChild(tempSpan, node);
-                                
-                                // تعديل المؤشر
-                                i++;
-                                
-                                highlightCount++;
-                            }
-                        }
-                    }
-                }
-            }
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
             
             // تطبيق الإبراز على جميع العناصر
             allTextElements.forEach(highlightText);
@@ -1376,23 +958,14 @@
                     // إضافة تأخير مختلف لكل عنصر لإنشاء تأثير متتابع
                     setTimeout(function() {
                         el.classList.add('active');
-<<<<<<< HEAD
                     }, index * 50);
                 });
             }, 300);
-=======
-                    }, index * 100);
-                });
-                
-                console.log('تم إبراز ' + highlights.length + ' كلمة في نتائج البحث');
-            }, 500);
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
         }
     });
 </script>
 
 <style>
-<<<<<<< HEAD
     /* أنماط عامة */
     body {
         font-family: 'Tajawal', sans-serif;
@@ -1464,112 +1037,4 @@
     }
 </style>
 
-=======
-    /* Custom styles for the report cards */
-    .report-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    .report-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
-    }
-    
-    .section-title {
-        border-bottom: 1px solid #eee;
-        padding-bottom: 0.5rem;
-        margin-bottom: 1rem;
-        font-weight: 600;
-    }
-    
-    .info-section {
-        background-color: #f8f9fa;
-        border-radius: 0.5rem;
-        padding: 1rem;
-    }
-    
-    .info-item {
-        margin-bottom: 0.5rem;
-    }
-    
-    .badge {
-        font-size: 0.8rem;
-        padding: 0.4rem 0.6rem;
-    }
-    
-    /* Styling for the download all contacts button */
-    .btn-danger {
-        background: linear-gradient(45deg, #dc3545, #fd7e14);
-        border: none;
-        transition: all 0.3s ease;
-    }
-    
-    .btn-danger:hover {
-        background: linear-gradient(45deg, #c82333, #e8700a);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    
-    .btn-outline-danger {
-        border-color: #dc3545;
-        color: #dc3545;
-    }
-    
-    .btn-outline-danger:hover {
-        background: linear-gradient(45deg, #dc3545, #fd7e14);
-        border-color: transparent;
-    }
-    
-    .btn-outline-success {
-        border-color: #28a745;
-        color: #28a745;
-    }
-    
-    .btn-outline-success:hover {
-        background-color: #28a745;
-        color: white;
-    }
-    
-    /* تنسيق خاص لإبراز نتائج البحث */
-    .metabit-highlight {
-        background: linear-gradient(to right, #0d6efd, #6610f2, #fd7e14);
-        color: white !important;
-        padding: 2px 5px;
-        border-radius: 4px;
-        font-weight: bold;
-        display: inline-block;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        animation: metabit-pulse 2s infinite;
-        margin: 0 2px;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-        transform: scale(1.05);
-        transition: all 0.3s ease;
-        position: relative;
-        z-index: 5;
-        opacity: 0.9;
-    }
-    
-    .metabit-highlight.active {
-        opacity: 1;
-        transform: scale(1.1);
-    }
-    
-    .metabit-highlight:hover {
-        transform: scale(1.15);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-    }
-    
-    @keyframes metabit-pulse {
-        0% {
-            box-shadow: 0 0 0 0 rgba(102, 16, 242, 0.7);
-        }
-        70% {
-            box-shadow: 0 0 0 10px rgba(102, 16, 242, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(102, 16, 242, 0);
-        }
-    }
-</style>
->>>>>>> 0b2e9edf5d191e0912dd4d125ab7926541c65858
 {% endblock %}
