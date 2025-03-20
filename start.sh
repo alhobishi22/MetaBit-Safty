@@ -1,6 +1,6 @@
 #!/bin/bash
-# تشغيل كلا العمليتين باستخدام honcho
-echo "Starting services with honcho..."
+# تشغيل كلا العمليتين: تطبيق الويب وبوت تلجرام
+echo "Starting services..."
 echo "PORT=$PORT"
 echo "PYTHONPATH=$PYTHONPATH"
 
@@ -15,5 +15,10 @@ pip install -r requirements.txt
 # عرض المكتبات المثبتة للتشخيص
 pip list | grep -E 'numpy|pandas'
 
-# تشغيل الخدمات
-honcho start
+# تشغيل بوت تلجرام في الخلفية
+echo "Starting Telegram bot in background..."
+python run_telegram_bot.py &
+
+# تشغيل تطبيق الويب
+echo "Starting web application..."
+gunicorn --bind 0.0.0.0:$PORT --workers=2 --threads=2 --worker-class=gevent wsgi:app
