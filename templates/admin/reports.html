@@ -21,11 +21,11 @@
                             </select>
                         </div>
 
-                        <!-- معلومات النصاب -->
+                        <!-- معلومات المبلغ به  -->
                         <div class="card bg-light border-0 p-4 mb-4">
                             <h5 class="card-title mb-4">
                                 <i class="fas fa-user-circle text-primary me-2"></i>
-                                معلومات النصاب
+                                معلومات المبلغ به 
                             </h5>
                             <div class="scammer-info">
                                 <div class="row g-3">
@@ -49,106 +49,23 @@
                             </div>
                         </div>
 
-                        <!-- معلومات المحافظ -->
-                        <div class="card bg-light border-0 p-4 mb-4">
-                            <h5 class="card-title mb-4">
-                                <i class="fas fa-wallet text-primary me-2"></i>
-                                معلومات المحافظ
-                            </h5>
-                            <div class="wallet-info">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="text" name="wallet_address" class="form-control" id="walletAddress" placeholder="عنوان المحفظة">
-                                            <label for="walletAddress">عنوان المحفظة</label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-floating">
-                                            <input type="text" name="network_type" class="form-control" id="networkType" placeholder="نوع الشبكة">
-                                            <label for="networkType">نوع الشبكة</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-outline-secondary mt-3" onclick="addWalletInfo()">
-                                    <i class="fas fa-plus me-2"></i>
-                                    إضافة محفظة أخرى
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- وسائل دفع أخرى -->
-                        <div class="card bg-light border-0 p-4 mb-4">
-                            <h5 class="card-title mb-4">
-                                <i class="fas fa-money-bill-wave text-primary me-2"></i>
-                                وسائل دفع أخرى
-                            </h5>
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" name="paypal" class="form-control" id="paypal" placeholder="PayPal">
-                                        <label for="paypal">PayPal</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" name="payer" class="form-control" id="payer" placeholder="Payer">
-                                        <label for="payer">Payer</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" name="perfect_money" class="form-control" id="perfectMoney" placeholder="Perfect Money">
-                                        <label for="perfectMoney">Perfect Money</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" name="alkremi_bank" class="form-control" id="alkremiBank" placeholder="بنك الكريمي">
-                                        <label for="alkremiBank">بنك الكريمي</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" name="jeeb_wallet" class="form-control" id="jeebWallet" placeholder="محفظة جيب">
-                                        <label for="jeebWallet">محفظة جيب</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" name="jawali_wallet" class="form-control" id="jawaliWallet" placeholder="محفظة جوالي">
-                                        <label for="jawaliWallet">محفظة جوالي</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" name="cash_wallet" class="form-control" id="cashWallet" placeholder="محفظة كاش">
-                                        <label for="cashWallet">محفظة كاش</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating">
-                                        <input type="text" name="one_cash" class="form-control" id="oneCash" placeholder="ون كاش">
-                                        <label for="oneCash">ون كاش</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- حقول مخصصة -->
+                        <!-- إضافة معلومات اخرى
+ -->
                         <div class="card bg-light border-0 p-4 mb-4">
                             <h5 class="card-title mb-4">
                                 <i class="fas fa-plus-circle text-primary me-2"></i>
-                                حقول مخصصة
+                                إضافة معلومات اخرى
+
                             </h5>
                             <div class="custom-fields">
-                                <p class="text-muted mb-3">يمكنك إضافة حقول مخصصة حسب احتياجك لتوثيق معلومات إضافية</p>
+                                <p class="text-muted mb-3">يمكنك إضافة إضافة معلومات اخرى
+ حسب احتياجك لتوثيق معلومات إضافية</p>
                                 <div id="customFieldsContainer">
                                     <!-- هنا سيتم إضافة الحقول المخصصة بشكل ديناميكي -->
                                 </div>
                                 <button type="button" class="btn btn-outline-primary mt-3" onclick="addCustomField()">
                                     <i class="fas fa-plus me-2"></i>
-                                    إضافة حقل مخصص
+                                    إضافة معلومات اخرى
                                 </button>
                             </div>
                         </div>
@@ -429,37 +346,7 @@ function addScammerInfo() {
     }, 10);
 }
 
-// إضافة معلومات محفظة جديدة مع تأثير حركي
-function addWalletInfo() {
-    const container = document.querySelector('.wallet-info .row');
-    const newFields = `
-        <div class="col-md-6" style="opacity: 0; transform: translateY(10px);">
-            <div class="form-floating">
-                <input type="text" name="wallet_address" class="form-control" placeholder="عنوان المحفظة">
-                <label>عنوان المحفظة</label>
-            </div>
-        </div>
-        <div class="col-md-6" style="opacity: 0; transform: translateY(10px);">
-            <div class="form-floating">
-                <input type="text" name="network_type" class="form-control" placeholder="نوع الشبكة">
-                <label>نوع الشبكة</label>
-            </div>
-        </div>
-    `;
-    container.insertAdjacentHTML('beforeend', newFields);
-    
-    // تطبيق التأثير الحركي
-    const newElements = container.querySelectorAll('div[style*="opacity: 0"]');
-    setTimeout(() => {
-        newElements.forEach(el => {
-            el.style.opacity = '1';
-            el.style.transform = 'translateY(0)';
-            el.style.transition = 'all 0.3s ease';
-        });
-    }, 10);
-}
-
-// إضافة حقل مخصص جديد
+// إضافة معلومات اخرى جديد
 function addCustomField() {
     const container = document.getElementById('customFieldsContainer');
     const fieldIndex = document.querySelectorAll('.custom-field-row').length;

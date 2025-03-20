@@ -20,11 +20,11 @@
                     </div>
                 </div>
                 <div class="card-body p-4">
-                    <!-- معلومات النصاب -->
+                    <!-- معلومات المبلغ به  -->
                     <div class="report-section mb-4">
                         <h4 class="section-title">
                             <i class="fas fa-user-circle text-primary me-2"></i>
-                            معلومات النصاب
+                            معلومات المبلغ به 
                         </h4>
                         <div class="row g-3">
                             {% if report.scammer_name %}
@@ -47,115 +47,9 @@
                         </div>
                     </div>
 
-                    <!-- معلومات المحافظ -->
-                    {% if report.wallet_address %}
-                    <div class="report-section mb-4">
-                        <h4 class="section-title">
-                            <i class="fas fa-wallet text-primary me-2"></i>
-                            معلومات المحافظ
-                        </h4>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">عنوان المحفظة:</span>
-                                    <span class="info-value">{{ report.wallet_address|replace('|', ', ') }}</span>
-                                </div>
-                            </div>
-                            
-                            {% if report.network_type %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">نوع الشبكة:</span>
-                                    <span class="info-value">{{ report.network_type|replace('|', ', ') }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
+                    <!-- تم حذف قسم معلومات المحافظ -->
 
-                    <!-- وسائل دفع أخرى -->
-                    {% if report.paypal or report.payer or report.perfect_money or report.alkremi_bank or report.jeeb_wallet or report.jawali_wallet or report.cash_wallet or report.one_cash %}
-                    <div class="report-section mb-4">
-                        <h4 class="section-title">
-                            <i class="fas fa-money-bill-wave text-primary me-2"></i>
-                            وسائل دفع أخرى
-                        </h4>
-                        <div class="row g-3">
-                            {% if report.paypal %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">PayPal:</span>
-                                    <span class="info-value">{{ report.paypal }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if report.payer %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">Payer:</span>
-                                    <span class="info-value">{{ report.payer }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if report.perfect_money %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">Perfect Money:</span>
-                                    <span class="info-value">{{ report.perfect_money }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if report.alkremi_bank %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">بنك الكريمي:</span>
-                                    <span class="info-value">{{ report.alkremi_bank }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if report.jeeb_wallet %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">محفظة جيب:</span>
-                                    <span class="info-value">{{ report.jeeb_wallet }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if report.jawali_wallet %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">محفظة جوالي:</span>
-                                    <span class="info-value">{{ report.jawali_wallet }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if report.cash_wallet %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">محفظة كاش:</span>
-                                    <span class="info-value">{{ report.cash_wallet }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if report.one_cash %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">ون كاش:</span>
-                                    <span class="info-value">{{ report.one_cash }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
+                    <!-- تم حذف قسم وسائل دفع أخرى -->
 
                     <!-- الحقول المخصصة -->
                     {% if custom_fields and custom_fields|length > 0 %}
@@ -163,7 +57,8 @@
                         <div class="report-section-header">
                             <h3 class="section-title">
                                 <i class="fas fa-plus-circle text-danger me-2"></i>
-                                حقول مخصصة
+                                إضافة معلومات اخرى
+
                             </h3>
                         </div>
                         <div class="report-section-body">
