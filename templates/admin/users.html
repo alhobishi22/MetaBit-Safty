@@ -1,6 +1,127 @@
 {% extends "admin/base.html" %}
 
 {% block admin_content %}
+<style>
+    /* Enhanced button styles */
+    .btn-toggle-admin {
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        margin: 0 5px;
+        font-weight: 600;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-width: 140px;
+        letter-spacing: 0.5px;
+    }
+    
+    .btn-toggle-admin:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+        z-index: 1;
+    }
+    
+    .btn-toggle-admin:after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        top: 0;
+        left: -100%;
+        transition: all 0.5s ease;
+        z-index: 1;
+    }
+    
+    .btn-toggle-admin:hover:after {
+        left: 0;
+    }
+    
+    .btn-toggle-admin i {
+        position: relative;
+        z-index: 2;
+        font-size: 1.1rem;
+        transform: scale(1);
+        transition: transform 0.3s ease;
+    }
+    
+    .btn-toggle-admin:hover i {
+        transform: scale(1.2);
+    }
+    
+    .btn-toggle-admin span {
+        position: relative;
+        z-index: 2;
+    }
+    
+    .btn-toggle-admin.admin-grant {
+        background: linear-gradient(135deg, #198754, #146c43);
+        color: white;
+    }
+    
+    .btn-toggle-admin.admin-revoke {
+        background: linear-gradient(135deg, #ffc107, #cc9a06);
+        color: white;
+    }
+    
+    .btn-toggle-admin:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545, #b02a37);
+        color: white;
+        border-radius: 12px;
+        padding: 0.6rem 1rem;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .btn-delete:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    /* Table improvements */
+    .table-users {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    }
+    
+    .table-users thead {
+        background: linear-gradient(90deg, rgba(13, 110, 253, 0.1), rgba(102, 16, 242, 0.1));
+    }
+    
+    .table-users th {
+        font-weight: 600;
+        border-bottom: none;
+        padding: 15px 10px;
+    }
+    
+    .table-users tr:hover {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+    
+    .table-users td {
+        padding: 12px 10px;
+        vertical-align: middle;
+    }
+</style>
+
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0"><i class="fas fa-users me-2"></i>إدارة المستخدمين</h2>
@@ -10,7 +131,6 @@
             </a>
             <span class="badge bg-primary fs-5 ms-2">{{ users|length }} مستخدم</span>
         </div>
-        <span class="badge bg-primary fs-5">{{ users|length }} مستخدم</span>
     </div>
 
     <div class="card border-0 shadow-sm">
@@ -19,7 +139,7 @@
         </div>
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle table-users">
                     <thead class="table-light">
                         <tr>
                             <th scope="col">#</th>
@@ -50,12 +170,13 @@
                                 <div class="btn-group" role="group">
                                     {% if user.id != current_user.id %}
                                     <form action="{{ url_for('toggle_admin', id=user.id) }}" method="post" class="d-inline">
-                                        <button type="submit" class="btn btn-sm {% if user.is_admin %}btn-warning{% else %}btn-success{% endif %}" title="{% if user.is_admin %}إلغاء صلاحيات المشرف{% else %}منح صلاحيات المشرف{% endif %}">
+                                        <button type="submit" class="btn-toggle-admin {% if user.is_admin %}admin-revoke{% else %}admin-grant{% endif %}" title="{% if user.is_admin %}إلغاء صلاحيات المشرف{% else %}منح صلاحيات المشرف{% endif %}">
                                             <i class="fas {% if user.is_admin %}fa-user-minus{% else %}fa-user-shield{% endif %}"></i>
+                                            <span>{% if user.is_admin %}إلغاء الإشراف{% else %}منح الإشراف{% endif %}</span>
                                         </button>
                                     </form>
                                     
-                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}" title="حذف المستخدم">
+                                    <button type="button" class="btn-delete" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}" title="حذف المستخدم">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                     {% else %}
