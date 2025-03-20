@@ -15,11 +15,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // تقسيم استعلام البحث إلى كلمات فردية (بتجاهل الفراغات الزائدة)
     const searchTerms = searchQuery.trim().split(/\s+/).filter(term => term.length > 0);
     
+    // تحسين التعبير العادي للبحث - تجنب استخدام حدود الكلمات للأرقام
+    const isNumericSearch = searchTerms.every(term => /^\d+$/.test(term));
+    
     // إنشاء نمط للبحث عن كل الكلمات
-    // استخدام حدود الكلمات للبحث عن كلمات كاملة فقط
-    const searchPattern = new RegExp('(' + searchTerms.map(term => 
-        term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // هروب من الأحرف الخاصة
-    ).join('|') + ')', 'gi');
+    let searchPattern;
+    if (isNumericSearch) {
+        // إذا كان البحث عن أرقام فقط، نستخدم تعبير عادي بسيط بدون حدود الكلمات
+        searchPattern = new RegExp('(' + searchTerms.map(term => 
+            term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // هروب من الأحرف الخاصة
+        ).join('|') + ')', 'g');
+    } else {
+        // للبحث عن النصوص العادية
+        searchPattern = new RegExp('(' + searchTerms.map(term => 
+            term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') // هروب من الأحرف الخاصة
+        ).join('|') + ')', 'gi');
+    }
+    
+    console.log('نوع البحث:', isNumericSearch ? 'أرقام' : 'نص');
     
     // العناصر التي نريد البحث فيها عن النص - استهداف عناصر محددة فقط داخل بطاقات التقارير
     // تعديل الاستهداف ليشمل فقط عناصر البيانات وليس التسميات
@@ -68,51 +81,62 @@ document.addEventListener('DOMContentLoaded', function() {
     function highlightTextNodes(element, pattern) {
         if (!element) return;
         
-        // الحصول على جميع عقد الأبناء
-        const childNodes = element.childNodes;
-        
-        // المرور على كل عقدة
-        for (let i = 0; i < childNodes.length; i++) {
-            const node = childNodes[i];
+        try {
+            // الحصول على جميع عقد الأبناء
+            const childNodes = element.childNodes;
             
-            // إذا كانت عقدة نص
-            if (node.nodeType === Node.TEXT_NODE) {
-                // البحث عن النص المطابق
-                const text = node.textContent;
-                const matches = text.match(pattern);
+            // المرور على كل عقدة
+            for (let i = 0; i < childNodes.length; i++) {
+                const node = childNodes[i];
                 
-                // إذا تم العثور على تطابق
-                if (matches) {
-                    // إنشاء عنصر span جديد
-                    const highlightedText = text.replace(pattern, 
-                        '<span class="search-highlight">$1</span>'
-                    );
+                // إذا كانت عقدة نص
+                if (node.nodeType === Node.TEXT_NODE) {
+                    // البحث عن النص المطابق
+                    const text = node.textContent;
+                    const matches = text.match(pattern);
                     
-                    // إنشاء عنصر مؤقت لتحويل النص إلى HTML
-                    const tempElement = document.createElement('div');
-                    tempElement.innerHTML = highlightedText;
-                    
-                    // استبدال عقدة النص بالعناصر الجديدة
-                    const fragment = document.createDocumentFragment();
-                    while (tempElement.firstChild) {
-                        fragment.appendChild(tempElement.firstChild);
+                    // إذا تم العثور على تطابق
+                    if (matches) {
+                        try {
+                            // إنشاء عنصر span جديد
+                            const highlightedText = text.replace(pattern, 
+                                '<span class="search-highlight">$1</span>'
+                            );
+                            
+                            // إنشاء عنصر مؤقت لتحويل النص إلى HTML
+                            const tempElement = document.createElement('div');
+                            tempElement.innerHTML = highlightedText;
+                            
+                            // استبدال عقدة النص بالعناصر الجديدة
+                            const fragment = document.createDocumentFragment();
+                            while (tempElement.firstChild) {
+                                fragment.appendChild(tempElement.firstChild);
+                            }
+                            
+                            // إدراج العناصر الجديدة قبل عقدة النص الحالية
+                            element.insertBefore(fragment, node);
+                            
+                            // حذف عقدة النص الأصلية
+                            element.removeChild(node);
+                            
+                            // تعديل المؤشر لمراعاة العناصر الجديدة المضافة
+                            i += fragment.childNodes.length - 1;
+                            
+                            console.log('تم إبراز النص داخل عقدة نصية');
+                        } catch (err) {
+                            console.error('خطأ أثناء إبراز النص:', err);
+                        }
                     }
-                    
-                    // إدراج العناصر الجديدة قبل عقدة النص الحالية
-                    element.insertBefore(fragment, node);
-                    
-                    // حذف عقدة النص الأصلية
-                    element.removeChild(node);
-                    
-                    // تعديل المؤشر لمراعاة العناصر الجديدة المضافة
-                    i += fragment.childNodes.length - 1;
-                    
-                    console.log('تم إبراز النص داخل عقدة نصية');
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    // إذا كانت عقدة عنصر، قم بالبحث في أبنائها بشكل متكرر
+                    // تجنب العناصر التي تم إبرازها بالفعل
+                    if (!node.classList || !node.classList.contains('search-highlight')) {
+                        highlightTextNodes(node, pattern);
+                    }
                 }
-            } else if (node.nodeType === Node.ELEMENT_NODE) {
-                // إذا كانت عقدة عنصر، قم بالبحث في أبنائها بشكل متكرر
-                highlightTextNodes(node, pattern);
             }
+        } catch (err) {
+            console.error('خطأ في وظيفة highlightTextNodes:', err);
         }
     }
     

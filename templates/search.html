@@ -565,8 +565,11 @@
 <!-- إضافة Font Awesome -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
+<!-- إضافة ملفات CSS مع معلمة عشوائية لتجنب التخزين المؤقت -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v={{ range(1000, 9999) | random }}">
+
 <!-- إضافة سكريبت إبراز كلمات البحث -->
-<script src="{{ url_for('static', filename='js/search-highlight.js') }}"></script>
+<script src="{{ url_for('static', filename='js/search-highlight.js') }}?v={{ range(1000, 9999) | random }}"></script>
 
 <script>
     // وظيفة مساعدة لعرض رسائل الإشعار بدون عنوان الموقع
@@ -608,11 +611,6 @@
         var cleanName = name ? name.replace(/[^\u0600-\u06FF\s\w\d()]/g, '') : namePrefix;
         if (!cleanName || cleanName.trim() === '') cleanName = namePrefix;
         
-        // إضافة بادئة الاسم إذا لم تكن موجودة بالفعل
-        if (!cleanName.includes(namePrefix)) {
-            cleanName = namePrefix + ' ' + cleanName;
-        }
-        
         var cleanPhone = phone ? phone.replace(/[^\d+]/g, '') : '';
         
         // التحقق من وجود رقم هاتف بعد التنظيف
@@ -624,10 +622,10 @@
         if (!cleanPhone.startsWith('+')) {
             // إذا كان الرقم يبدأ بصفر، نحذف الصفر ونضيف 966+
             if (cleanPhone.startsWith('0')) {
-                cleanPhone = '+966' + cleanPhone.substring(1);
+                cleanPhone = '+967' + cleanPhone.substring(1);
             } else {
                 // إذا لم يبدأ بصفر، نضيف 966+ مباشرة
-                cleanPhone = '+966' + cleanPhone;
+                cleanPhone = '+967' + cleanPhone;
             }
         }
         
@@ -1021,19 +1019,50 @@
     
     /* أنماط إبراز نتائج البحث */
     .metabit-highlight {
-        background-color: rgba(255, 255, 0, 0.3);
-        padding: 2px 0;
+        background: linear-gradient(120deg, rgba(13, 110, 253, 0.2), rgba(102, 16, 242, 0.2), rgba(253, 126, 20, 0.2));
+        color: #333;
+        padding: 2px 4px;
         border-radius: 3px;
-        transition: background-color 0.5s ease;
+        font-weight: 600;
+        display: inline-block;
+        position: relative;
+        z-index: 1;
+        transition: all 0.3s ease;
+        box-decoration-break: clone;
+        -webkit-box-decoration-break: clone;
+        border-bottom: 2px solid transparent;
+    }
+    
+    .metabit-highlight::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #0d6efd, #6610f2, #fd7e14);
+        border-radius: 100px;
+        z-index: -1;
+        box-shadow: 0 0 10px rgba(102, 16, 242, 0.6);
+        animation: wave 2s infinite ease-in-out;
     }
     
     .metabit-highlight.active {
-        background-color: rgba(255, 255, 0, 0.7);
+        background: linear-gradient(120deg, rgba(13, 110, 253, 0.3), rgba(102, 16, 242, 0.3), rgba(253, 126, 20, 0.3));
     }
     
     .metabit-highlight:hover {
-        transform: scale(1.05);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        transform: translateY(-2px);
+        text-shadow: 0 0 1px rgba(0, 0, 0, 0.3);
+    }
+    
+    @keyframes wave {
+        0%, 100% {
+            transform: translateX(0);
+        }
+        50% {
+            transform: translateX(5px);
+        }
     }
 </style>
 
