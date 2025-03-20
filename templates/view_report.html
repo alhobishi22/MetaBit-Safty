@@ -1,220 +1,225 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
+{% block title %}تفاصيل البلاغ{% endblock %}
+
+<style>
+    /* تحسين أنماط عرض البلاغ */
+    .section-title {
+        color: #333;
+        font-weight: 600;
+        font-size: 20px;
+        margin-bottom: 10px;
+    }
+    
+    .info-label {
+        color: #333;
+        font-weight: bold;
+    }
+    
+    .info-value {
+        color: #0d6efd;
+        font-weight: 500;
+    }
+    
+    .bg-light {
+        background-color: #f8f9fa !important;
+    }
+    
+    .description-text {
+        color: #333;
+        line-height: 1.6;
+    }
+    
+    /* تنسيق الأقسام */
+    .report-section {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    /* تحسين وضوح العناوين الرئيسية */
+    .card-title {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    
+    .section-header {
+        border-radius: 8px 8px 0 0;
+    }
+    
+    /* لون عنوان تفاصيل البلاغ */
+    .report-title {
+        color: #000 !important;
+        font-weight: bold;
+    }
+    
+    .section-content {
+        border-radius: 0 0 8px 8px;
+    }
+</style>
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-9">
-            <div class="card shadow-lg border-0 rounded-4">
-                <div class="card-header bg-gradient-primary text-white p-4 rounded-top-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h2 class="m-0">
-                            {% if report.type == 'scammer' %}
-                            <i class="fas fa-exclamation-triangle me-2"></i> بلاغ عن نصاب
-                            {% else %}
-                            <i class="fas fa-hand-holding-usd me-2"></i> بلاغ عن مديونية
-                            {% endif %}
-                        </h2>
-                        <div>
-                            <span class="badge bg-light text-dark fs-6">رقم البلاغ: {{ report.id }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-body p-4">
-                    <!-- معلومات المبلغ به  -->
-                    <div class="report-section mb-4">
-                        <h4 class="section-title">
-                            <i class="fas fa-user-circle text-primary me-2"></i>
-                            معلومات المبلغ به 
-                        </h4>
-                        <div class="row g-3">
-                            {% if report.scammer_name %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">الاسم:</span>
-                                    <span class="info-value">{{ report.scammer_name|replace('|', ', ') }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if report.scammer_phone %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">رقم الهاتف:</span>
-                                    <span class="info-value">{{ report.scammer_phone|replace('|', ', ') }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- تم حذف قسم معلومات المحافظ -->
-
-                    <!-- تم حذف قسم وسائل دفع أخرى -->
-
-                    <!-- الحقول المخصصة -->
-                    {% if custom_fields and custom_fields|length > 0 %}
-                    <section class="report-section">
-                        <div class="report-section-header">
-                            <h3 class="section-title">
-                                <i class="fas fa-plus-circle text-danger me-2"></i>
-                                إضافة معلومات اخرى
-
-                            </h3>
-                        </div>
-                        <div class="report-section-body">
-                            <div class="row">
-                                {% for field_name, field_value in custom_fields.items() %}
-                                    {% if field_value and field_value|string|lower != 'nan' %}
-                                    <div class="col-md-6 mb-3">
-                                        <div class="info-item">
-                                            <span class="info-label" style="color: black;">{{ field_name }}:</span>
-                                            <span class="info-value" style="color: red;">
-                                                {{ field_value }}
-                                                {% if field_value in duplicates and duplicates[field_value] > 1 %}
-                                                    <span class="badge rounded-pill bg-primary ms-1" style="font-size: 0.75rem; vertical-align: middle;" title="عدد مرات التكرار في البلاغات">
-                                                        {{ duplicates[field_value] }}
-                                                    </span>
-                                                {% endif %}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </section>
-                    {% endif %}
-
-                    <!-- معلومات المديونية -->
-                    {% if report.type == 'debt' and (report.debt_amount or report.debt_date) %}
-                    <div class="report-section mb-4">
-                        <h4 class="section-title">
-                            <i class="fas fa-hand-holding-usd text-primary me-2"></i>
-                            معلومات المديونية
-                        </h4>
-                        <div class="row g-3">
-                            {% if report.debt_amount %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">قيمة المديونية:</span>
-                                    <span class="info-value">{{ report.debt_amount }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if report.debt_date %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">تاريخ المديونية:</span>
-                                    <span class="info-value">{{ report.debt_date.strftime('%Y-%m-%d') }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- وصف البلاغ -->
-                    {% if report.description %}
-                    <div class="report-section mb-4">
-                        <h4 class="section-title">
-                            <i class="fas fa-file-alt text-primary me-2"></i>
-                            وصف البلاغ
-                        </h4>
-                        <div class="description-box p-3 bg-light rounded">
-                            {{ report.description|nl2br }}
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- الملفات المرفقة -->
-                    {% if report.media_files %}
-                    <div class="report-section mb-4">
-                        <h4 class="section-title">
-                            <i class="fas fa-paperclip text-primary me-2"></i>
-                            الملفات المرفقة
-                        </h4>
-                        <div class="row g-3">
-                            {% for file in report.media_files.split('|') %}
-                            <div class="col-md-4 col-sm-6">
-                                <div class="card attachment-card h-100">
-                                    <div class="card-body p-2 text-center">
-                                        <a href="{{ url_for('uploaded_file', filename=file) }}" target="_blank" class="attachment-link">
-                                            {% if file.lower().endswith(('png', 'jpg', 'jpeg', 'gif', 'webp')) %}
-                                            <img src="{{ url_for('uploaded_file', filename=file) }}" class="img-thumbnail attachment-preview" alt="مرفق">
-                                            {% else %}
-                                            <i class="fas fa-file-alt fa-3x text-primary"></i>
-                                            {% endif %}
-                                            <div class="mt-2 text-truncate">{{ file }}</div>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    <!-- معلومات إضافية -->
-                    <div class="report-section mb-4">
-                        <h4 class="section-title">
-                            <i class="fas fa-info-circle text-primary me-2"></i>
-                            معلومات إضافية
-                        </h4>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">تم الإبلاغ بواسطة:</span>
-                                    <span class="info-value">{{ report.user.username }}</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">تاريخ الإبلاغ:</span>
-                                    <span class="info-value">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                                </div>
-                            </div>
-                            {% if report.updated_at and report.updated_at != report.created_at %}
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <span class="info-label">آخر تحديث:</span>
-                                    <span class="info-value">{{ report.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3 d-flex justify-content-between">
-                    <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>
-                        العودة للرئيسية
+<div class="container py-4">
+    <div class="card shadow-lg border-0 rounded-4 mb-4">
+        <div class="card-header bg-gradient-primary py-3 rounded-top-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0 text-black">
+                    <i class="fas fa-file-alt me-2 text-black"></i>
+                    تفاصيل البلاغ
+                </h3>
+                <div>
+                    <a href="{{ url_for('search') }}" class="btn btn-light btn-sm">
+                        
+                        <i class="fas fa-search me-1"></i>
+                        العودة للبحث
                     </a>
-                    <div>
-                        {% if current_user.is_authenticated and (current_user.is_admin or current_user.id == report.user_id) %}
-                        <a href="{{ url_for('edit_report', report_id=report.id) }}" class="btn btn-primary me-2">
-                            <i class="fas fa-edit me-1"></i>
-                            تعديل
-                        </a>
-                        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteReportModal">
-                            <i class="fas fa-trash-alt me-1"></i>
-                            حذف
-                        </button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <!-- معلومات النصاب -->
+            <div class="report-section mb-4">
+                <h4 class="section-title mb-3">
+                    <i class="fas fa-user-slash me-2 text-danger"></i>
+                    معلومات النصاب
+                </h4>
+                <div class="bg-light p-3 rounded-3 mb-3">
+                    <div class="row">
+                        {% if report.scammer_name %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">الاسم:</span>
+                                <span class="info-value">{{ report.scammer_name|replace('|', ', ') }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if report.scammer_phone %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">رقم الهاتف:</span>
+                                <span class="info-value phone-number">{{ report.scammer_phone|replace('|', ', ') }}</span>
+                                <button class="btn btn-sm btn-outline-success mt-2" onclick="saveContact('{{ report.scammer_phone.split('|')[0] }}', '{% if report.scammer_name %}{{ report.scammer_name.split('|')[0] }}{% else %}نصاب{% endif %}')">
+                                    <i class="fas fa-address-card me-1"></i> حفظ كجهة اتصال
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        {% if report.wallet_address %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">عنوان المحفظة:</span>
+                                <span class="info-value">{{ report.wallet_address|replace('|', ', ') }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if report.network_type %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">نوع الشبكة:</span>
+                                <span class="info-value">{{ report.network_type|replace('|', ', ') }}</span>
+                            </div>
+                        </div>
                         {% endif %}
                     </div>
                 </div>
             </div>
+
+            <!-- معلومات الدين -->
+            {% if report.debt_amount or report.debt_date %}
+            <div class="report-section mb-4">
+                <h4 class="section-title mb-3">
+                    <i class="fas fa-money-bill-wave me-2 text-success"></i>
+                    معلومات الدين
+                </h4>
+                <div class="bg-light p-3 rounded-3 mb-3">
+                    <div class="row">
+                        {% if report.debt_amount %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">المبلغ:</span>
+                                <span class="info-value">{{ report.debt_amount }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if report.debt_date %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">تاريخ الدين:</span>
+                                <span class="info-value">{{ report.debt_date.strftime('%Y-%m-%d') }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- معلومات إضافية -->
+            <div class="report-section mb-4">
+                <h4 class="section-title mb-3">
+                    <i class="fas fa-info-circle me-2 text-primary"></i>
+                    معلومات إضافية
+                </h4>
+                <div class="bg-light p-3 rounded-3 mb-3">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">نوع البلاغ:</span>
+                                <span class="info-value">{% if report.type == 'scammer' %}نصاب{% elif report.type == 'debt' %}مديونية{% else %}{{ report.type }}{% endif %}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">تاريخ البلاغ:</span>
+                                <span class="info-value">{{ report.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if report.description %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">الوصف:</span>
+                                <div class="info-value mt-2 description-text">{{ report.description|nl2br|safe }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- أزرار التحكم -->
+            {% if current_user.is_authenticated and (current_user.is_admin or current_user.id == report.user_id) %}
+            <div class="d-flex justify-content-end mt-4">
+                <a href="{{ url_for('edit_report', report_id=report.id) }}" class="btn btn-primary me-2">
+                    <i class="fas fa-edit me-1"></i>
+                    تعديل البلاغ
+                </a>
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                    <i class="fas fa-trash-alt me-1"></i>
+                    حذف البلاغ
+                </button>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <!-- نافذة تأكيد الحذف -->
 {% if current_user.is_authenticated and (current_user.is_admin or current_user.id == report.user_id) %}
-<div class="modal fade" id="deleteReportModal" tabindex="-1" aria-labelledby="deleteReportModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteReportModalLabel">تأكيد الحذف</h5>
+                <h5 class="modal-title" id="deleteModalLabel">تأكيد الحذف</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -230,4 +235,229 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Modal for Contact Creation -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title" id="contactModalLabel">حفظ جهة اتصال</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contactForm">
+                    <div class="mb-3">
+                        <label for="contactName" class="form-label text-dark fw-bold">الاسم</label>
+                        <input type="text" class="form-control" id="contactName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactPhone" class="form-label text-dark fw-bold">رقم الهاتف</label>
+                        <input type="tel" class="form-control" id="contactPhone" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactPrefix" class="form-label text-dark fw-bold">بادئة الاسم</label>
+                        <input type="text" class="form-control" id="contactPrefix" value="نصاب">
+                        <small class="text-secondary">سيتم إضافة هذه البادئة إلى اسم جهة الاتصال</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactNotes" class="form-label text-dark fw-bold">ملاحظات</label>
+                        <textarea class="form-control" id="contactNotes" rows="3">تم الإبلاغ عنه كنصاب في نظام البلاغات</textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                <button type="button" class="btn btn-success" id="downloadVcard">حفظ جهة الاتصال</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // وظيفة مساعدة لعرض رسائل الإشعار بدون عنوان الموقع
+    function showAlert(message) {
+        // إنشاء عنصر div للإشعار
+        var alertDiv = document.createElement('div');
+        alertDiv.className = 'custom-alert';
+        alertDiv.innerHTML = `
+            <div class="alert-content">
+                <div class="alert-message">${message}</div>
+                <button class="alert-button">موافق</button>
+            </div>
+        `;
+        
+        // إضافة الإشعار إلى الصفحة
+        document.body.appendChild(alertDiv);
+        
+        // إضافة حدث النقر لزر الإغلاق
+        alertDiv.querySelector('.alert-button').addEventListener('click', function() {
+            document.body.removeChild(alertDiv);
+        });
+        
+        // إغلاق الإشعار عند النقر خارجه
+        alertDiv.addEventListener('click', function(event) {
+            if (event.target === alertDiv) {
+                document.body.removeChild(alertDiv);
+            }
+        });
+    }
+    
+    // وظيفة لإنشاء vCard متوافق مع تطبيقات الهاتف المحمول
+    function createVCard(phone, name, namePrefix = 'نصاب') {
+        // التحقق من وجود رقم هاتف صالح
+        if (!phone || phone.trim() === '') {
+            throw new Error('رقم الهاتف غير صالح أو فارغ');
+        }
+        
+        // تنظيف البيانات وإزالة أي أحرف خاصة قد تسبب مشاكل
+        var cleanName = name ? name.replace(/[^\u0600-\u06FF\s\w\d()]/g, '') : namePrefix;
+        if (!cleanName || cleanName.trim() === '') cleanName = namePrefix;
+        
+        var cleanPhone = phone ? phone.replace(/[^\d+]/g, '') : '';
+        
+        // التحقق من وجود رقم هاتف بعد التنظيف
+        if (!cleanPhone || cleanPhone.trim() === '') {
+            throw new Error('رقم الهاتف غير صالح بعد التنظيف');
+        }
+        
+        // إضافة رمز الدولة إذا لم يكن موجوداً
+        if (!cleanPhone.startsWith('+')) {
+            // إذا كان الرقم يبدأ بصفر، نحذف الصفر ونضيف 967+
+            if (cleanPhone.startsWith('0')) {
+                cleanPhone = '+967' + cleanPhone.substring(1);
+            } else {
+                // إذا لم يبدأ بصفر، نضيف 967+ مباشرة
+                cleanPhone = '+967' + cleanPhone;
+            }
+        }
+        
+        // إنشاء vCard بتنسيق متوافق مع تطبيقات الهاتف المحمول
+        var vcard = 'BEGIN:VCARD\r\n';
+        vcard += 'VERSION:3.0\r\n';
+        vcard += 'N:' + cleanName + ';;;;\r\n';
+        vcard += 'FN:' + cleanName + '\r\n';
+        vcard += 'TEL;TYPE=CELL:' + cleanPhone + '\r\n';
+        vcard += 'NOTE:تم الإبلاغ عنه كنصاب في نظام البلاغات\r\n';
+        vcard += 'CATEGORIES:نصاب\r\n';
+        vcard += 'END:VCARD\r\n\r\n';
+        
+        return {
+            vcard: vcard,
+            cleanName: cleanName,
+            cleanPhone: cleanPhone
+        };
+    }
+    
+    // وظيفة لتنزيل vCard
+    function downloadVCard(vcard, filename) {
+        var blob = new Blob([vcard], { type: 'text/vcard' });
+        var url = URL.createObjectURL(blob);
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    
+    // وظيفة لحفظ جهة اتصال واحدة
+    function saveContact(phone, name) {
+        // التحقق من صحة رقم الهاتف
+        if (!phone || phone.trim() === '') {
+            showAlert('خطأ: رقم الهاتف غير صالح');
+            return;
+        }
+        
+        // وضع القيم في المودال
+        document.getElementById('contactPhone').value = phone;
+        document.getElementById('contactName').value = name;
+        
+        // عرض المودال
+        var contactModal = new bootstrap.Modal(document.getElementById('contactModal'));
+        contactModal.show();
+        
+        // معالجة نقر زر التنزيل
+        document.getElementById('downloadVcard').onclick = function() {
+            try {
+                // الحصول على القيم من المودال
+                var phone = document.getElementById('contactPhone').value;
+                var name = document.getElementById('contactName').value;
+                var namePrefix = document.getElementById('contactPrefix').value || 'نصاب';
+                
+                // التحقق من صحة البيانات
+                if (!phone || phone.trim() === '') {
+                    throw new Error('رقم الهاتف غير صالح');
+                }
+                
+                // إنشاء vCard
+                var vcardData = createVCard(phone, name, namePrefix);
+                
+                // تنزيل vCard
+                downloadVCard(vcardData.vcard, vcardData.cleanName + '.vcf');
+                
+                // عرض رسالة نجاح بدون عنوان الموقع
+                showAlert('تم تنزيل جهة الاتصال بنجاح!');
+                
+                // إغلاق المودال
+                contactModal.hide();
+            } catch (error) {
+                console.error('Error creating contact:', error);
+                showAlert('حدث خطأ أثناء تحميل جهة الاتصال: ' + error.message);
+            }
+        };
+    }
+
+    // إضافة أنماط CSS للتنبيهات المخصصة
+    document.addEventListener('DOMContentLoaded', function() {
+        // إضافة أنماط CSS للتنبيهات المخصصة
+        var style = document.createElement('style');
+        style.textContent = `
+            .custom-alert {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 9999;
+            }
+            .alert-content {
+                background: linear-gradient(135deg, #0d6efd, #6610f2);
+                color: white;
+                padding: 20px;
+                border-radius: 10px;
+                max-width: 90%;
+                width: 400px;
+                text-align: center;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            }
+            .alert-message {
+                margin-bottom: 20px;
+                font-size: 18px;
+                font-weight: 500;
+                color: white;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            }
+            .alert-button {
+                background-color: white;
+                color: #6610f2;
+                border: none;
+                padding: 8px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: all 0.3s ease;
+                font-size: 16px;
+            }
+            .alert-button:hover {
+                background-color: #f8f9fa;
+                transform: translateY(-2px);
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
 {% endblock %}
