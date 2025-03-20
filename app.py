@@ -208,15 +208,24 @@ def index():
     debt_reports = Report.query.filter_by(type='debt').count()
     total_users = User.query.count()
     
+    # إحصائيات المستخدم الحالي
+    user_scammer_reports = Report.query.filter_by(user_id=current_user.id, type='scammer').count()
+    user_debt_reports = Report.query.filter_by(user_id=current_user.id, type='debt').count()
+    user_total_reports = user_scammer_reports + user_debt_reports
+    
     # آخر البلاغات
     latest_reports = Report.query.order_by(Report.created_at.desc()).limit(4).all()
     
+    # تمرير عدد المستخدمين فقط للمشرفين
     return render_template('index.html', 
                          total_reports=total_reports,
                          scammer_reports=scammer_reports,
                          debt_reports=debt_reports,
-                         total_users=total_users,
-                         latest_reports=latest_reports)
+                         total_users=total_users if current_user.is_admin else None,
+                         latest_reports=latest_reports,
+                         user_scammer_reports=user_scammer_reports,
+                         user_debt_reports=user_debt_reports,
+                         user_total_reports=user_total_reports)
 
 @app.route('/search')
 @login_required

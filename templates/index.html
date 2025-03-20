@@ -49,6 +49,7 @@
 </div>
 
 <!-- Statistics Section -->
+{% if current_user.is_admin %}
 <div class="container mb-5">
     <div class="row">
         <div class="col-12 text-center mb-5">
@@ -84,6 +85,7 @@
                 <p class="stat-label">بلاغات المديونية</p>
             </div>
         </div>
+        {% if total_users is not none %}
         <div class="col-md-3 col-6">
             <div class="stat-card">
                 <div class="stat-icon mb-3">
@@ -91,6 +93,47 @@
                 </div>
                 <h3 class="stat-number">{{ total_users }}</h3>
                 <p class="stat-label">عدد المستخدمين</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- User Statistics Section -->
+<div class="container mb-5">
+    <div class="row">
+        <div class="col-12 text-center mb-5">
+            <h2 class="section-title">إحصائياتك الشخصية</h2>
+            <p class="text-muted">بلاغاتك ومساهماتك في المنصة</p>
+        </div>
+    </div>
+    <div class="row g-4 text-center">
+        <div class="col-md-4 col-12">
+            <div class="stat-card user-stat-card">
+                <div class="stat-icon mb-3">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3 class="stat-number">{{ user_total_reports }}</h3>
+                <p class="stat-label">إجمالي بلاغاتك</p>
+            </div>
+        </div>
+        <div class="col-md-4 col-12">
+            <div class="stat-card user-stat-card">
+                <div class="stat-icon mb-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="stat-number">{{ user_scammer_reports }}</h3>
+                <p class="stat-label">بلاغات النصب</p>
+            </div>
+        </div>
+        <div class="col-md-4 col-12">
+            <div class="stat-card user-stat-card">
+                <div class="stat-icon mb-3">
+                    <i class="fas fa-money-bill-wave"></i>
+                </div>
+                <h3 class="stat-number">{{ user_debt_reports }}</h3>
+                <p class="stat-label">بلاغات المديونية</p>
             </div>
         </div>
     </div>
@@ -490,6 +533,25 @@
 .stat-label {
     color: #666;
     margin: 0;
+}
+
+/* User Statistics */
+.user-stat-card {
+    background: linear-gradient(135deg, rgba(26, 35, 126, 0.05) 0%, rgba(103, 58, 183, 0.1) 100%);
+    border: 1px solid rgba(103, 58, 183, 0.2);
+}
+
+.user-stat-card .stat-icon {
+    background: linear-gradient(135deg, #673ab7 0%, #3f51b5 100%);
+}
+
+.user-stat-card .stat-number {
+    color: #673ab7;
+}
+
+.user-stat-card:hover {
+    box-shadow: 0 15px 30px rgba(103, 58, 183, 0.2);
+    border-color: rgba(103, 58, 183, 0.3);
 }
 
 /* Latest Reports */
