@@ -575,7 +575,7 @@ def edit_report(report_id):
     if report.user_id != current_user.id and not current_user.is_admin:
         flash('ليس لديك صلاحية تعديل هذا البلاغ', 'danger')
         return redirect(url_for('index'))
-    
+
     if request.method == 'POST':
         # جمع البيانات من النموذج
         report_type = request.form.get('type')
@@ -1150,8 +1150,18 @@ def export_reports_excel():
             'رقم البلاغ', 'النوع', 'اسم النصاب', 'رقم الهاتف', 'المحفظة', 'الشبكة',
             'PayPal', 'Payer', 'Perfect Money', 'بنك الكريمي', 'محفظة جيب',
             'محفظة جوالي', 'محفظة كاش', 'ون كاش', 'قيمة المديونية', 'تاريخ المديونية',
-            'الوصف', 'المستخدم', 'تاريخ الإنشاء', 'الحقول المخصصة'
+            'الوصف', 'المستخدم', 'تاريخ الإنشاء'
         ]
+        
+        # إضافة عمود الحقول المخصصة فقط إذا كان هناك بلاغات تحتوي على حقول مخصصة
+        has_custom_fields = False
+        for report in reports:
+            if report.custom_fields and report.custom_fields != '{}' and report.custom_fields.lower() != 'nan':
+                has_custom_fields = True
+                break
+        
+        if has_custom_fields:
+            headers.append('الحقول المخصصة')
         
         # كتابة العناوين
         for col, header in enumerate(headers):
@@ -1167,7 +1177,8 @@ def export_reports_excel():
         worksheet.set_column(16, 16, 40)  # الوصف
         worksheet.set_column(17, 17, 15)  # المستخدم
         worksheet.set_column(18, 18, 20)  # تاريخ الإنشاء
-        worksheet.set_column(19, 19, 40)  # الحقول المخصصة
+        if has_custom_fields:
+            worksheet.set_column(19, 19, 40)  # الحقول المخصصة
         
         # كتابة البيانات
         for row, report in enumerate(reports, start=1):
@@ -1195,6 +1206,12 @@ def export_reports_excel():
             created_at = report.created_at.strftime('%Y-%m-%d %H:%M') if report.created_at else ""
             debt_date = report.debt_date.strftime('%Y-%m-%d') if report.debt_date else ""
             
+            # معالجة القيم الفارغة أو 'nan'
+            def clean_value(value):
+                if value is None or value == '' or value.lower() == 'nan':
+                    return ""
+                return value
+            
             # كتابة البيانات في الصفوف
             data = [
                 report.id,
@@ -1203,21 +1220,35 @@ def export_reports_excel():
                 scammer_phone,
                 wallet_address,
                 network_type,
-                report.paypal or "",
-                report.payer or "",
-                report.perfect_money or "",
-                report.alkremi_bank or "",
-                report.jeeb_wallet or "",
-                report.jawali_wallet or "",
-                report.cash_wallet or "",
-                report.one_cash or "",
+                clean_value(report.paypal or ""),
+                clean_value(report.payer or ""),
+                clean_value(report.perfect_money or ""),
+                clean_value(report.alkremi_bank or ""),
+                clean_value(report.jeeb_wallet or ""),
+                clean_value(report.jawali_wallet or ""),
+                clean_value(report.cash_wallet or ""),
+                clean_value(report.one_cash or ""),
                 report.debt_amount or "",
                 debt_date,
-                report.description or "",
+                clean_value(report.description or ""),
                 username,
-                created_at,
-                report.custom_fields or ""
+                created_at
             ]
+            
+            # إضافة الحقول المخصصة إذا كانت موجودة
+            if has_custom_fields:
+                custom_fields_str = ""
+                if report.custom_fields and report.custom_fields != '{}' and report.custom_fields.lower() != 'nan':
+                    try:
+                        custom_fields_dict = json.loads(report.custom_fields)
+                        custom_fields_items = []
+                        for key, value in custom_fields_dict.items():
+                            if value and str(value).lower() != 'nan':
+                                custom_fields_items.append(f"{key}: {value}")
+                        custom_fields_str = " | ".join(custom_fields_items)
+                    except:
+                        pass
+                data.append(custom_fields_str)
             
             for col, value in enumerate(data):
                 worksheet.write(row, col, value, format_to_use)
@@ -1293,25 +1324,50 @@ def import_reports_excel():
                 # تحديد نوع البلاغ
                 report_type = 'scammer' if row['النوع'] == 'نصاب' else 'debt'
                 
+                # معالجة القيم الفارغة أو 'nan'
+                def clean_value(value):
+                    if pd.isna(value) or str(value).lower() == 'nan':
+                        return ''
+                    return str(value)
+                
                 # إنشاء بلاغ جديد
                 new_report = Report(
                     user_id=current_user.id,
                     type=report_type,
-                    scammer_name=str(row.get('اسم النصاب', '')),
-                    scammer_phone=str(row.get('رقم الهاتف', '')),
-                    description=str(row.get('الوصف', '')),
-                    wallet_address=str(row.get('المحفظة', '')),
-                    network_type=str(row.get('الشبكة', '')),
-                    paypal=str(row.get('PayPal', '')),
-                    payer=str(row.get('Payer', '')),
-                    perfect_money=str(row.get('Perfect Money', '')),
-                    alkremi_bank=str(row.get('بنك الكريمي', '')),
-                    jeeb_wallet=str(row.get('محفظة جيب', '')),
-                    jawali_wallet=str(row.get('محفظة جوالي', '')),
-                    cash_wallet=str(row.get('محفظة كاش', '')),
-                    one_cash=str(row.get('ون كاش', '')),
-                    custom_fields=str(row.get('الحقول المخصصة', ''))
+                    scammer_name=clean_value(row.get('اسم النصاب', '')),
+                    scammer_phone=clean_value(row.get('رقم الهاتف', '')),
+                    description=clean_value(row.get('الوصف', '')),
+                    wallet_address=clean_value(row.get('المحفظة', '')),
+                    network_type=clean_value(row.get('الشبكة', '')),
+                    paypal=clean_value(row.get('PayPal', '')),
+                    payer=clean_value(row.get('Payer', '')),
+                    perfect_money=clean_value(row.get('Perfect Money', '')),
+                    alkremi_bank=clean_value(row.get('بنك الكريمي', '')),
+                    jeeb_wallet=clean_value(row.get('محفظة جيب', '')),
+                    jawali_wallet=clean_value(row.get('محفظة جوالي', '')),
+                    cash_wallet=clean_value(row.get('محفظة كاش', '')),
+                    one_cash=clean_value(row.get('ون كاش', ''))
                 )
+                
+                # معالجة الحقول المخصصة إذا كانت موجودة
+                if 'الحقول المخصصة' in row and not pd.isna(row['الحقول المخصصة']):
+                    custom_fields_text = clean_value(row['الحقول المخصصة'])
+                    if custom_fields_text:
+                        # تحويل نص الحقول المخصصة إلى قاموس
+                        custom_fields_dict = {}
+                        
+                        # إذا كان النص يحتوي على فواصل، نقسمه
+                        if ' | ' in custom_fields_text:
+                            field_pairs = custom_fields_text.split(' | ')
+                            for pair in field_pairs:
+                                if ': ' in pair:
+                                    key, value = pair.split(': ', 1)
+                                    if key and value:
+                                        custom_fields_dict[key] = value
+                        
+                        # تحويل القاموس إلى JSON
+                        if custom_fields_dict:
+                            new_report.custom_fields = json.dumps(custom_fields_dict, ensure_ascii=False)
                 
                 # إضافة قيمة المديونية وتاريخها إذا كان نوع البلاغ مديونية
                 if report_type == 'debt':
@@ -1351,6 +1407,7 @@ def import_reports_excel():
             flash('حدث خطأ أثناء استيراد الملف. الرجاء المحاولة مرة أخرى.', 'danger')
             return redirect(request.url)
         except Exception as e:
+            db.session.rollback()
             logger.error(f"Error: {str(e)}")
             flash('حدث خطأ أثناء استيراد الملف. الرجاء المحاولة مرة أخرى.', 'danger')
             return redirect(request.url)
