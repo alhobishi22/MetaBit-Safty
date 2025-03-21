@@ -174,6 +174,25 @@ class Report(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
+# نماذج لأكواد التلجرام
+class TelegramCode(db.Model):
+    __tablename__ = 'telegram_codes'
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(100), unique=True, nullable=False)
+    is_used = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # العلاقة مع المستخدمين المسجلين
+    registered_user = db.relationship('TelegramUser', backref='code_ref', uselist=False)
+
+class TelegramUser(db.Model):
+    __tablename__ = 'telegram_users'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.BigInteger, unique=True, nullable=False)
+    username = db.Column(db.String(100))
+    code_id = db.Column(db.Integer, db.ForeignKey('telegram_codes.id'))
+    registered_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 class ReportForm(FlaskForm):
     type = SelectField('نوع البلاغ', choices=[('scammer', 'نصاب'), ('debt', 'مديونية')], validators=[DataRequired()])
     debt_amount = FloatField('قيمة المديونية', validators=[Optional()])

@@ -1,12 +1,17 @@
 import os
 import logging
-import sqlite3
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
-import string
-import random
 import re
 from dotenv import load_dotenv
+from telegram_db import (
+    app as telegram_app,
+    verify_code,
+    mark_code_used,
+    is_user_registered,
+    get_all_registered_user_ids,
+    create_tables
+)
 
 # Load environment variables
 load_dotenv()
@@ -16,99 +21,6 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
-
-# Database setup
-def setup_db():
-    conn = sqlite3.connect('instance/telegram_codes.db')
-    cursor = conn.cursor()
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS registration_codes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        code TEXT UNIQUE NOT NULL,
-        is_used INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
-    
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS registered_users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        user_id INTEGER UNIQUE NOT NULL,
-        username TEXT,
-        code TEXT NOT NULL,
-        registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
-    conn.commit()
-    conn.close()
-
-# Generate a random code that can include both Arabic and English characters
-def generate_random_code(length=8):
-    # English alphanumeric characters
-    english_chars = string.ascii_letters + string.digits
-    # Arabic characters (basic set)
-    arabic_chars = 'أبتثجحخدذرزسشصضطظعغفقكلمنهوي'
-    # Combined character set
-    all_chars = english_chars + arabic_chars
-    
-    # Generate a code with a mix of characters
-    return ''.join(random.choice(all_chars) for _ in range(length))
-
-# Clean and normalize code for comparison
-def normalize_code(code):
-    # Remove whitespace and normalize
-    return re.sub(r'\s+', '', code).strip().lower()
-
-# Verify registration code
-def verify_code(code):
-    if not code:
-        return False
-        
-    normalized_code = normalize_code(code)
-    
-    conn = sqlite3.connect('instance/telegram_codes.db')
-    cursor = conn.cursor()
-    
-    # Get all unused codes
-    cursor.execute("SELECT code FROM registration_codes WHERE is_used = 0")
-    all_codes = cursor.fetchall()
-    
-    # Check if the normalized input matches any normalized code
-    for db_code in all_codes:
-        if normalized_code == normalize_code(db_code[0]):
-            conn.close()
-            return db_code[0]  # Return the actual code from DB
-    
-    conn.close()
-    return None
-
-# Mark code as used
-def mark_code_used(code, user_id, username):
-    conn = sqlite3.connect('instance/telegram_codes.db')
-    cursor = conn.cursor()
-    cursor.execute("UPDATE registration_codes SET is_used = 1 WHERE code = ?", (code,))
-    cursor.execute("INSERT INTO registered_users (user_id, username, code) VALUES (?, ?, ?)", 
-                  (user_id, username, code))
-    conn.commit()
-    conn.close()
-
-# Check if user is registered
-def is_user_registered(user_id):
-    conn = sqlite3.connect('instance/telegram_codes.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM registered_users WHERE user_id = ?", (user_id,))
-    result = cursor.fetchone()
-    conn.close()
-    return result is not None
-
-# Get all registered users
-def get_all_registered_users():
-    conn = sqlite3.connect('instance/telegram_codes.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT user_id FROM registered_users")
-    users = cursor.fetchall()
-    conn.close()
-    return [user[0] for user in users]
 
 # Send notification to a specific user
 async def send_notification_to_user(bot, user_id, message, keyboard=None):
@@ -144,7 +56,8 @@ async def send_notification_to_all_users(message, include_button=True):
         bot = application.bot
         
         # Get all registered users
-        users = get_all_registered_users()
+        with telegram_app.app_context():
+            users = get_all_registered_user_ids()
         
         # Create keyboard if needed
         keyboard = None
@@ -201,35 +114,129 @@ async def send_new_report_notification(report_data):
     # Send notification to all registered users
     return await send_notification_to_all_users(message)
 
-# Command handlers
+# Command handler for /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
+    user_id = user.id
+    username = user.username or user.first_name
     
     # Check if user is already registered
-    if is_user_registered(user.id):
-        # Create a button that opens the web app
+    with telegram_app.app_context():
+        registered = is_user_registered(user_id)
+    
+    if registered:
+        # User is already registered
         webapp_url = "https://kyc-metabit-test.onrender.com/"
-        keyboard = [
+        keyboard = InlineKeyboardMarkup([
             [InlineKeyboardButton(
                 text="فتح تطبيق MetaBit Safety",
                 web_app=WebAppInfo(url=webapp_url)
             )]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
+        ])
         
-        await update.message.reply_html(
-            f"مرحباً {user.mention_html()}! أنت مسجل بالفعل في نظام MetaBit Safety.\n"
-            f"يمكنك الآن دخول نظام الحمايه.",
-            reply_markup=reply_markup
+        await update.message.reply_text(
+            "مرحباً بك مجدداً في MetaBit Safety!\n\n"
+            "يمكنك الآن استخدام التطبيق للتحقق من بلاغات النصب والاحتيال.",
+            reply_markup=keyboard
         )
     else:
-        # Ask for registration code
-        await update.message.reply_html(
-            f"مرحباً {user.mention_html()}! للوصول إلى تطبيق MetaBit Safety،\n"
-            f"يرجى إدخال كود التسجيل الخاص بك."
+        # User is not registered, ask for registration code
+        await update.message.reply_text(
+            "مرحباً بك في MetaBit Safety!\n\n"
+            "للتسجيل، يرجى إدخال كود التسجيل الخاص بك:"
         )
 
+# Handle registration code verification
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle user messages and verify registration codes."""
+    user = update.effective_user
+    user_id = user.id
+    username = user.username or user.first_name
+    message_text = update.message.text
+    
+    # Check if user is already registered
+    with telegram_app.app_context():
+        registered = is_user_registered(user_id)
+    
+    if registered:
+        # User is already registered, provide access to the web app
+        webapp_url = "https://kyc-metabit-test.onrender.com/"
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(
+                text="فتح تطبيق MetaBit Safety",
+                web_app=WebAppInfo(url=webapp_url)
+            )]
+        ])
+        
+        await update.message.reply_text(
+            "أنت مسجل بالفعل في MetaBit Safety.\n\n"
+            "يمكنك استخدام التطبيق للتحقق من بلاغات النصب والاحتيال.",
+            reply_markup=keyboard
+        )
+    else:
+        # User is not registered, verify the code
+        with telegram_app.app_context():
+            valid_code = verify_code(message_text)
+        
+        if valid_code:
+            # Code is valid, register the user
+            with telegram_app.app_context():
+                mark_code_used(valid_code, user_id, username)
+            
+            # Provide access to the web app
+            webapp_url = "https://kyc-metabit-test.onrender.com/"
+            keyboard = InlineKeyboardMarkup([
+                [InlineKeyboardButton(
+                    text="فتح تطبيق MetaBit Safety",
+                    web_app=WebAppInfo(url=webapp_url)
+                )]
+            ])
+            
+            await update.message.reply_text(
+                "تم تسجيلك بنجاح في MetaBit Safety!\n\n"
+                "يمكنك الآن استخدام التطبيق للتحقق من بلاغات النصب والاحتيال.",
+                reply_markup=keyboard
+            )
+        else:
+            # Code is invalid
+            await update.message.reply_text(
+                "عذراً، كود التسجيل غير صحيح.\n\n"
+                "يرجى التأكد من الكود وإعادة المحاولة، أو التواصل مع المسؤول للحصول على كود جديد."
+            )
+
+# Handle web app button
+async def web_app_button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle web app button click."""
+    user = update.effective_user
+    user_id = user.id
+    
+    # Check if user is registered
+    with telegram_app.app_context():
+        registered = is_user_registered(user_id)
+    
+    if registered:
+        # User is registered, provide access to the web app
+        webapp_url = "https://kyc-metabit-test.onrender.com/"
+        keyboard = InlineKeyboardMarkup([
+            [InlineKeyboardButton(
+                text="فتح تطبيق MetaBit Safety",
+                web_app=WebAppInfo(url=webapp_url)
+            )]
+        ])
+        
+        await update.callback_query.message.reply_text(
+            "يمكنك استخدام التطبيق للتحقق من بلاغات النصب والاحتيال.",
+            reply_markup=keyboard
+        )
+    else:
+        # User is not registered
+        await update.callback_query.message.reply_text(
+            "يجب عليك التسجيل أولاً باستخدام كود التسجيل.\n\n"
+            "يرجى إدخال كود التسجيل الخاص بك:"
+        )
+
+# Command handlers
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Send a message when the command /help is issued."""
     await update.message.reply_text(
@@ -264,72 +271,31 @@ async def open_app(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             "استخدم الأمر /start للبدء."
         )
 
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle messages with potential registration codes."""
-    user = update.effective_user
-    
-    # Skip if user is already registered
-    if is_user_registered(user.id):
-        webapp_url = "https://kyc-metabit-test.onrender.com/"
-        keyboard = [
-            [InlineKeyboardButton(
-                text="فتح تطبيق MetaBit Safety",
-                web_app=WebAppInfo(url=webapp_url)
-            )]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        
-        await update.message.reply_text(
-            "أنت مسجل بالفعل! يمكنك فتح التطبيق المصغر:",
-            reply_markup=reply_markup
-        )
-        return
-    
-    # Check if message is a potential registration code
-    input_code = update.message.text.strip()
-    
-    # Verify the code
-    valid_code = verify_code(input_code)
-    
-    if valid_code:
-        # Valid code, register user
-        mark_code_used(valid_code, user.id, user.username)
-        
-        webapp_url = "https://kyc-metabit-test.onrender.com/"
-        keyboard = [
-            [InlineKeyboardButton(
-                text="فتح تطبيق MetaBit Safety",
-                web_app=WebAppInfo(url=webapp_url)
-            )]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        
-        await update.message.reply_text(
-            "تم التحقق من كود التسجيل بنجاح! يمكنك الآن دخول نظام الحمايه:",
-            reply_markup=reply_markup
-        )
-    else:
-        # Invalid code
-        await update.message.reply_text(
-            "عذراً، كود التسجيل غير صالح. يرجى التحقق من الكود وإعادة المحاولة."
-        )
-
 def main() -> None:
     """Start the bot."""
-    # Setup database
-    setup_db()
+    # Create the Application and pass it your bot's token
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    if not token:
+        logger.error("TELEGRAM_BOT_TOKEN not set. Cannot start bot.")
+        return
     
-    # Create the Application
-    application = Application.builder().token(os.environ.get("TELEGRAM_BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")).build()
-
-    # Add handlers
+    application = Application.builder().token(token).build()
+    
+    # Add command handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("open", open_app))
+    
+    # Add message handler
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
+    
+    # Add callback query handler for web app button
+    application.add_handler(CallbackQueryHandler(web_app_button, pattern="^webapp$"))
+    
     # Run the bot until the user presses Ctrl-C
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == "__main__":
+    with telegram_app.app_context():
+        create_tables()
     main()
