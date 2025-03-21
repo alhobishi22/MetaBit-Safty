@@ -1055,7 +1055,7 @@ def admin_reports():
     
     return render_template('admin/reports.html', reports=report_data, report_type=report_type)
 
-@app.route('/admin/report/<int:report_id>/delete', methods=['POST'])
+@app.route('/admin/report/<int:report_id>/delete', methods=['GET', 'POST'])
 @login_required
 def admin_delete_report(report_id):
     if not current_user.is_admin:
@@ -1241,11 +1241,15 @@ def export_reports_excel():
                 if report.custom_fields and report.custom_fields != '{}' and report.custom_fields.lower() != 'nan':
                     try:
                         custom_fields_dict = json.loads(report.custom_fields)
-                        custom_fields_items = []
+                        # تصفية قيم "nan" من الحقول المخصصة
                         for key, value in custom_fields_dict.items():
-                            if value and str(value).lower() != 'nan':
-                                custom_fields_items.append(f"{key}: {value}")
-                        custom_fields_str = " | ".join(custom_fields_items)
+                            if isinstance(value, str):
+                                if value.lower() != "nan" and value.strip():
+                                    custom_fields_str += f"{key}: {value} | "
+                            elif value is not None:
+                                str_value = str(value)
+                                custom_fields_str += f"{key}: {str_value} | "
+                        custom_fields_str = custom_fields_str.strip(' |')
                     except:
                         pass
                 data.append(custom_fields_str)
