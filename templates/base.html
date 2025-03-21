@@ -170,46 +170,39 @@
                 <div class="nav-icon home-icon">
                     <i class="fas fa-home"></i>
                 </div>
-                <div class="nav-label">الرئيسية</div>
             </a>
             <a href="{{ url_for('search') }}" class="nav-item">
                 <div class="nav-icon search-icon">
                     <i class="fas fa-search"></i>
                 </div>
-                <div class="nav-label">البحث</div>
             </a>
             <a href="{{ url_for('report') }}" class="nav-item">
                 <div class="nav-icon add-icon">
                     <i class="fas fa-plus"></i>
                 </div>
-                <div class="nav-label">بلاغ جديد</div>
             </a>
             {% if current_user.is_admin %}
             <a href="{{ url_for('admin_dashboard') }}" class="nav-item">
                 <div class="nav-icon admin-icon">
                     <i class="fas fa-cog"></i>
                 </div>
-                <div class="nav-label">لوحة التحكم</div>
             </a>
             {% endif %}
             <a href="{{ url_for('logout') }}" class="nav-item">
                 <div class="nav-icon logout-icon">
                     <i class="fas fa-sign-out-alt"></i>
                 </div>
-                <div class="nav-label">تسجيل خروج</div>
             </a>
         {% else %}
             <a href="{{ url_for('login') }}" class="nav-item">
                 <div class="nav-icon login-icon">
                     <i class="fas fa-sign-in-alt"></i>
                 </div>
-                <div class="nav-label">تسجيل دخول</div>
             </a>
             <a href="{{ url_for('register') }}" class="nav-item">
                 <div class="nav-icon login-icon">
                     <i class="fas fa-user-plus"></i>
                 </div>
-                <div class="nav-label">تسجيل حساب جديد</div>
             </a>
         {% endif %}
     </div>
