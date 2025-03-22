@@ -195,6 +195,37 @@
                 </div>
             </div>
 
+            <!-- الحقول المخصصة -->
+            {% if custom_fields and custom_fields|length > 0 %}
+            <div class="report-section mb-4">
+                <h4 class="section-title mb-3">
+                    <i class="fas fa-list-alt me-2 text-warning"></i>
+                    الحقول المخصصة
+                </h4>
+                <div class="bg-light p-3 rounded-3 mb-3">
+                    <div class="row">
+                        {% for key, value in custom_fields.items() %}
+                        <div class="col-md-6">
+                            <div class="info-item mb-3">
+                                <span class="info-label fw-bold">{{ key }}:</span>
+                                <span class="info-value">
+                                    {% if value and value|lower != "nan" %}
+                                        {% if duplicates[value] and duplicates[value] > 1 %}
+                                            <span class="badge bg-danger">{{ duplicates[value] }}</span>
+                                        {% endif %}
+                                        {{ value }}
+                                    {% else %}
+                                        لا يوجد
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- أزرار التحكم -->
             {% if current_user.is_authenticated and (current_user.is_admin or current_user.id == report.user_id) %}
             <div class="d-flex justify-content-end mt-4">

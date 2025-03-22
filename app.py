@@ -158,8 +158,6 @@ class Report(db.Model):
     debt_date = db.Column(db.Date)
     scammer_name = db.Column(db.Text)
     scammer_phone = db.Column(db.Text)
-    wallet_address = db.Column(db.Text)
-    network_type = db.Column(db.Text)
     paypal = db.Column(db.String(100))
     payer = db.Column(db.String(100))
     perfect_money = db.Column(db.String(100))
@@ -199,8 +197,6 @@ class ReportForm(FlaskForm):
     debt_date = DateField('تاريخ المديونية', validators=[Optional()])
     scammer_name = StringField('اسم النصاب', validators=[DataRequired()])
     scammer_phone = StringField('رقم الهاتف', validators=[DataRequired()])
-    wallet_address = StringField('عنوان المحفظة', validators=[Optional()])
-    network_type = StringField('نوع الشبكة', validators=[Optional()])
     paypal = StringField('PayPal', validators=[Optional()])
     payer = StringField('Payer', validators=[Optional()])
     perfect_money = StringField('Perfect Money', validators=[Optional()])
@@ -272,8 +268,6 @@ def search():
                 'username': report.user.username,
                 'creation_date': report.created_at,
                 'debt_amount': report.debt_amount,
-                'wallet_address': report.wallet_address,
-                'wallet_type': report.network_type,
                 'custom_fields': {},
                 'description': report.description
             }
@@ -317,8 +311,6 @@ def search():
             search_fields = [
                 report.scammer_name, 
                 report.scammer_phone, 
-                report.wallet_address, 
-                report.network_type,
                 report.paypal, 
                 report.payer, 
                 report.perfect_money,
@@ -376,15 +368,6 @@ def search():
                     if name and name.lower() != "nan":
                         duplicates[name] = duplicates.get(name, 0) + 1
         
-        # Process wallet addresses
-        for r in all_reports:
-            if r.wallet_address:
-                addresses = r.wallet_address.split('|')
-                for addr in addresses:
-                    addr = addr.strip()
-                    if addr and addr.lower() != "nan":
-                        duplicates[addr] = duplicates.get(addr, 0) + 1
-        
         # Process payment methods
         payment_fields = ['paypal', 'payer', 'perfect_money', 'alkremi_bank', 
                          'jeeb_wallet', 'jawali_wallet', 'cash_wallet', 'one_cash']
@@ -440,12 +423,6 @@ def report():
         # جمع أرقام الهواتف المتعددة
         scammer_phones = request.form.getlist('scammer_phone')
         scammer_phone = '|'.join(filter(None, scammer_phones))
-        
-        # جمع عناوين المحافظ وأنواع الشبكات
-        wallet_addresses = request.form.getlist('wallet_address')
-        network_types = request.form.getlist('network_type')
-        wallet_address = '|'.join(filter(None, wallet_addresses))
-        network_type = '|'.join(filter(None, network_types))
 
         # معالجة الحقول المخصصة
         custom_fields_data = {}
@@ -482,8 +459,6 @@ def report():
                 type=report_type,
                 scammer_name=scammer_name,
                 scammer_phone=scammer_phone,
-                wallet_address=wallet_address,
-                network_type=network_type,
                 paypal=request.form.get('paypal'),
                 payer=request.form.get('payer'),
                 perfect_money=request.form.get('perfect_money'),
@@ -589,12 +564,6 @@ def edit_report(report_id):
         # جمع أرقام الهواتف المتعددة
         scammer_phones = request.form.getlist('scammer_phone')
         scammer_phone = '|'.join(filter(None, scammer_phones))
-        
-        # جمع عناوين المحافظ وأنواع الشبكات
-        wallet_addresses = request.form.getlist('wallet_address')
-        network_types = request.form.getlist('network_type')
-        wallet_address = '|'.join(filter(None, wallet_addresses))
-        network_type = '|'.join(filter(None, network_types))
 
         # معالجة الحقول المخصصة
         custom_fields_data = {}
@@ -629,8 +598,6 @@ def edit_report(report_id):
             report.type = report_type
             report.scammer_name = scammer_name
             report.scammer_phone = scammer_phone
-            report.wallet_address = wallet_address
-            report.network_type = network_type
             report.paypal = request.form.get('paypal')
             report.payer = request.form.get('payer')
             report.perfect_money = request.form.get('perfect_money')
@@ -812,15 +779,6 @@ def view_report(report_id):
                 name = name.strip()
                 if name and name.lower() != "nan":
                     duplicates[name] = duplicates.get(name, 0) + 1
-    
-    # معالجة عناوين المحافظ
-    for r in all_reports:
-        if r.wallet_address:
-            addresses = r.wallet_address.split('|')
-            for addr in addresses:
-                addr = addr.strip()
-                if addr and addr.lower() != "nan":
-                    duplicates[addr] = duplicates.get(addr, 0) + 1
     
     # معالجة طرق الدفع
     payment_fields = ['paypal', 'payer', 'perfect_money', 'alkremi_bank', 
@@ -1147,21 +1105,31 @@ def export_reports_excel():
         
         # إعداد العناوين
         headers = [
-            'رقم البلاغ', 'النوع', 'اسم النصاب', 'رقم الهاتف', 'المحفظة', 'الشبكة',
-            'PayPal', 'Payer', 'Perfect Money', 'بنك الكريمي', 'محفظة جيب',
-            'محفظة جوالي', 'محفظة كاش', 'ون كاش', 'قيمة المديونية', 'تاريخ المديونية',
+            'رقم البلاغ', 'النوع', 'اسم النصاب', 'رقم الهاتف',
+            'قيمة المديونية', 'تاريخ المديونية',
             'الوصف', 'المستخدم', 'تاريخ الإنشاء'
         ]
         
         # إضافة عمود الحقول المخصصة فقط إذا كان هناك بلاغات تحتوي على حقول مخصصة
         has_custom_fields = False
+        custom_field_keys = set()  # مجموعة لتخزين جميع مفاتيح الحقول المخصصة
+        
         for report in reports:
             if report.custom_fields and report.custom_fields != '{}' and report.custom_fields.lower() != 'nan':
                 has_custom_fields = True
-                break
+                try:
+                    custom_fields_dict = json.loads(report.custom_fields)
+                    for key in custom_fields_dict.keys():
+                        if key.strip():
+                            custom_field_keys.add(key)
+                except:
+                    pass
         
-        if has_custom_fields:
-            headers.append('الحقول المخصصة')
+        # إضافة أعمدة للحقول المخصصة
+        if custom_field_keys:
+            # ترتيب الحقول المخصصة أبجدياً
+            sorted_custom_fields = sorted(list(custom_field_keys))
+            headers.extend(sorted_custom_fields)
         
         # كتابة العناوين
         for col, header in enumerate(headers):
@@ -1172,13 +1140,15 @@ def export_reports_excel():
         worksheet.set_column(1, 1, 15)  # النوع
         worksheet.set_column(2, 2, 25)  # اسم النصاب
         worksheet.set_column(3, 3, 20)  # رقم الهاتف
-        worksheet.set_column(4, 14, 20)  # المحافظ والحسابات
-        worksheet.set_column(15, 15, 15)  # تاريخ المديونية
-        worksheet.set_column(16, 16, 40)  # الوصف
-        worksheet.set_column(17, 17, 15)  # المستخدم
-        worksheet.set_column(18, 18, 20)  # تاريخ الإنشاء
-        if has_custom_fields:
-            worksheet.set_column(19, 19, 40)  # الحقول المخصصة
+        worksheet.set_column(4, 4, 15)  # قيمة المديونية
+        worksheet.set_column(5, 5, 15)  # تاريخ المديونية
+        worksheet.set_column(6, 6, 40)  # الوصف
+        worksheet.set_column(7, 7, 15)  # المستخدم
+        worksheet.set_column(8, 8, 20)  # تاريخ الإنشاء
+        
+        # ضبط عرض الأعمدة للحقول المخصصة
+        if custom_field_keys:
+            worksheet.set_column(9, 9 + len(custom_field_keys), 20)  # الحقول المخصصة
         
         # كتابة البيانات
         for row, report in enumerate(reports, start=1):
@@ -1196,12 +1166,6 @@ def export_reports_excel():
             scammer_phones = report.scammer_phone.split('|') if report.scammer_phone else []
             scammer_phone = scammer_phones[0] if scammer_phones else ""
             
-            wallet_addresses = report.wallet_address.split('|') if report.wallet_address else []
-            wallet_address = wallet_addresses[0] if wallet_addresses else ""
-            
-            network_types = report.network_type.split('|') if report.network_type else []
-            network_type = network_types[0] if network_types else ""
-            
             # تنسيق التواريخ
             created_at = report.created_at.strftime('%Y-%m-%d %H:%M') if report.created_at else ""
             debt_date = report.debt_date.strftime('%Y-%m-%d') if report.debt_date else ""
@@ -1218,16 +1182,6 @@ def export_reports_excel():
                 'نصاب' if report.type == 'scammer' else 'مديونية',
                 scammer_name,
                 scammer_phone,
-                wallet_address,
-                network_type,
-                clean_value(report.paypal or ""),
-                clean_value(report.payer or ""),
-                clean_value(report.perfect_money or ""),
-                clean_value(report.alkremi_bank or ""),
-                clean_value(report.jeeb_wallet or ""),
-                clean_value(report.jawali_wallet or ""),
-                clean_value(report.cash_wallet or ""),
-                clean_value(report.one_cash or ""),
                 report.debt_amount or "",
                 debt_date,
                 clean_value(report.description or ""),
@@ -1236,23 +1190,22 @@ def export_reports_excel():
             ]
             
             # إضافة الحقول المخصصة إذا كانت موجودة
-            if has_custom_fields:
-                custom_fields_str = ""
+            if custom_field_keys:
+                custom_fields_dict = {}
                 if report.custom_fields and report.custom_fields != '{}' and report.custom_fields.lower() != 'nan':
                     try:
                         custom_fields_dict = json.loads(report.custom_fields)
-                        # تصفية قيم "nan" من الحقول المخصصة
-                        for key, value in custom_fields_dict.items():
-                            if isinstance(value, str):
-                                if value.lower() != "nan" and value.strip():
-                                    custom_fields_str += f"{key}: {value} | "
-                            elif value is not None:
-                                str_value = str(value)
-                                custom_fields_str += f"{key}: {str_value} | "
-                        custom_fields_str = custom_fields_str.strip(' |')
                     except:
                         pass
-                data.append(custom_fields_str)
+                
+                # إضافة قيم الحقول المخصصة
+                for key in sorted_custom_fields:
+                    value = ""
+                    if key in custom_fields_dict:
+                        value = custom_fields_dict[key]
+                        if isinstance(value, str) and (value.lower() == "nan" or not value.strip()):
+                            value = ""
+                    data.append(value)
             
             for col, value in enumerate(data):
                 worksheet.write(row, col, value, format_to_use)
@@ -1341,8 +1294,6 @@ def import_reports_excel():
                     scammer_name=clean_value(row.get('اسم النصاب', '')),
                     scammer_phone=clean_value(row.get('رقم الهاتف', '')),
                     description=clean_value(row.get('الوصف', '')),
-                    wallet_address=clean_value(row.get('المحفظة', '')),
-                    network_type=clean_value(row.get('الشبكة', '')),
                     paypal=clean_value(row.get('PayPal', '')),
                     payer=clean_value(row.get('Payer', '')),
                     perfect_money=clean_value(row.get('Perfect Money', '')),
@@ -1352,26 +1303,6 @@ def import_reports_excel():
                     cash_wallet=clean_value(row.get('محفظة كاش', '')),
                     one_cash=clean_value(row.get('ون كاش', ''))
                 )
-                
-                # معالجة الحقول المخصصة إذا كانت موجودة
-                if 'الحقول المخصصة' in row and not pd.isna(row['الحقول المخصصة']):
-                    custom_fields_text = clean_value(row['الحقول المخصصة'])
-                    if custom_fields_text:
-                        # تحويل نص الحقول المخصصة إلى قاموس
-                        custom_fields_dict = {}
-                        
-                        # إذا كان النص يحتوي على فواصل، نقسمه
-                        if ' | ' in custom_fields_text:
-                            field_pairs = custom_fields_text.split(' | ')
-                            for pair in field_pairs:
-                                if ': ' in pair:
-                                    key, value = pair.split(': ', 1)
-                                    if key and value:
-                                        custom_fields_dict[key] = value
-                        
-                        # تحويل القاموس إلى JSON
-                        if custom_fields_dict:
-                            new_report.custom_fields = json.dumps(custom_fields_dict, ensure_ascii=False)
                 
                 # إضافة قيمة المديونية وتاريخها إذا كان نوع البلاغ مديونية
                 if report_type == 'debt':
@@ -1389,6 +1320,22 @@ def import_reports_excel():
                                 pass
                         else:
                             new_report.debt_date = debt_date
+        
+                # معالجة الحقول المخصصة
+                custom_fields_dict = {}
+                
+                # البحث عن أي عمود غير الأعمدة القياسية واعتباره حقل مخصص
+                standard_columns = ['النوع', 'اسم النصاب', 'رقم الهاتف', 
+                                   'قيمة المديونية', 'تاريخ المديونية', 'الوصف', 'المستخدم', 'تاريخ الإنشاء',
+                                   'رقم البلاغ']
+                
+                for column in df.columns:
+                    if column not in standard_columns and not pd.isna(row[column]) and str(row[column]).lower() != 'nan' and str(row[column]).strip():
+                        custom_fields_dict[column] = clean_value(row[column])
+                
+                # تحويل القاموس إلى JSON
+                if custom_fields_dict:
+                    new_report.custom_fields = json.dumps(custom_fields_dict, ensure_ascii=False)
                 
                 # حفظ البلاغ في قاعدة البيانات
                 db.session.add(new_report)
