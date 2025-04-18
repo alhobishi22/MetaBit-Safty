@@ -4,7 +4,7 @@ services:
     env: python
     buildCommand: ./build.sh
     startCommand: ./start.sh
-    plan: free
+    plan: starter
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
@@ -28,4 +28,4 @@ databases:
   - name: metabit-safety-db
     databaseName: metabit_safety
     user: metabit_safety_user
-    plan: free
+    plan: starter
