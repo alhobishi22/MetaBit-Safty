@@ -25,7 +25,7 @@ services:
         value: app.py
 
 databases:
-  - name: metabit-safety-db
-    databaseName: metabit_safety
-    user: metabit_safety_user
+  - name: metabit-safty-v2-db
+    databaseName: metabit_safty_v2
+    user: metabit_safty_v2_user
     plan: starter
