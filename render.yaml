@@ -12,7 +12,7 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        value: postgresql://metabit_safty_db_user:i7jQbcMMM2sg7k12PwweDO1koIUd3ppF@dpg-cvc9e8bv2p9s73ad9g5g-a.singapore-postgres.render.com/metabit_safty_db
+        value: postgresql://metabit_safty_v2_user:XQOseF8u3nOdICnP2Ko8LcUMx7hI49TO@dpg-d01a2b3e5dus73e1rbi0-a.singapore-postgres.render.com/metabit_safty_v2
       - key: PORT
         value: 10000
       - key: TELEGRAM_BOT_TOKEN
